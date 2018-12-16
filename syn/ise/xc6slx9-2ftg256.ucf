@@ -145,8 +145,8 @@ NET o_buzz_out      LOC = J11 | IOSTANDARD = "LVCMOS33";  ##  Buzzer output
 ###############################################################################
 # I2C EEPROM pins
 
-NET io_scl          LOC = N12 | IOSTANDARD = "LVCMOS33";
-NET io_sda          LOC = P12 | IOSTANDARD = "LVCMOS33";
+NET io_i2c_scl          LOC = N12 | IOSTANDARD = "LVCMOS33";
+NET io_i2c_sda          LOC = P12 | IOSTANDARD = "LVCMOS33";
 
 
 ###############################################################################

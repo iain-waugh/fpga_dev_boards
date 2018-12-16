@@ -78,8 +78,8 @@ entity ax309_top is
 
     ---------------------------------------------------------------------------
     -- I2C EEPROM
-    io_scl : inout std_logic;
-    io_sda : inout std_logic;
+    io_i2c_scl : inout std_logic;
+    io_i2c_sda : inout std_logic;
 
     ---------------------------------------------------------------------------
     -- 6x7 Segment Display Interface
@@ -109,13 +109,13 @@ architecture ax309_top_rtl of ax309_top is
   signal o_ds1302_sio   : std_logic := '0';
   signal ds1302_sio_out : std_logic := '0';
 
-  signal i_scl   : std_logic;
-  signal o_scl   : std_logic := '0';
-  signal scl_out : std_logic := '0';
+  signal i_i2c_scl   : std_logic;
+  signal o_i2c_scl   : std_logic := '0';
+  signal i2c_scl_out : std_logic := '0';
 
-  signal i_sda   : std_logic;
-  signal o_sda   : std_logic := '0';
-  signal sda_out : std_logic := '0';
+  signal i_i2c_sda   : std_logic;
+  signal o_i2c_sda   : std_logic := '0';
+  signal i2c_sda_out : std_logic := '0';
 
   signal i_cam_sdat   : std_logic;
   signal o_cam_sdat   : std_logic := '0';
@@ -168,11 +168,11 @@ begin  -- ax309_top_rtl
 
   ---------------------------------------------------------------------------
   -- I2C EEPROM
-  io_scl <= o_scl when scl_out = '1' else 'Z';
-  i_scl  <= io_scl;
+  io_i2c_scl <= o_i2c_scl when i2c_scl_out = '1' else 'Z';
+  i_i2c_scl  <= io_i2c_scl;
 
-  io_sda <= o_sda when sda_out = '1' else 'Z';
-  i_sda  <= io_sda;
+  io_i2c_sda <= o_i2c_sda when i2c_sda_out = '1' else 'Z';
+  i_i2c_sda  <= io_i2c_sda;
 
   ---------------------------------------------------------------------------
   -- 6x7 Segment Display Interface
