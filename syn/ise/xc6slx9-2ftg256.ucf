@@ -17,7 +17,7 @@ NET o_led<3>        LOC = M6  | IOSTANDARD = "LVCMOS33";  ## LED4
 ###############################################################################
 # Pushbutton pins
 
-NET rstn            LOC = L3  | IOSTANDARD = "LVCMOS33";  ## Reset pushbutton
+NET i_rst_n         LOC = L3  | IOSTANDARD = "LVCMOS33";  ## Reset pushbutton
 
 NET i_key_in<0>     LOC = C3  | IOSTANDARD = "LVCMOS33";  ## KEY1
 NET i_key_in<1>     LOC = D3  | IOSTANDARD = "LVCMOS33";  ## KEY2
