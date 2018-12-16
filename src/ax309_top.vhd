@@ -60,8 +60,6 @@ entity ax309_top is
     --   * The FPGA's DIn is routed to GND, so don't drive it high.
     --   * The nCS pin is tied high with no FPGA connection
     -- i.e. The SD card is always enabled and you can't de-select it.
-
-    -- Corrected :
     o_sd_clk     : out std_logic;
     o_sd_gnd     : out std_logic;
     o_sd_datain  : out std_logic;
@@ -99,8 +97,8 @@ entity ax309_top is
     i_cam_vsync : in  std_logic;
     i_cam_d     : in  std_logic_vector(7 downto 0);
 
-    o_cmos_sclk  : out   std_logic;
-    io_cmos_sdat : inout std_logic
+    o_cam_sclk  : out   std_logic;
+    io_cam_sdat : inout std_logic
     );
 end ax309_top;
 
@@ -108,20 +106,20 @@ architecture ax309_top_rtl of ax309_top is
 
   -- Tristate breakout signals
   signal i_ds1302_sio   : std_logic;
-  signal o_ds1302_sio   : std_logic;
-  signal ds1302_sio_out : std_logic;
+  signal o_ds1302_sio   : std_logic := '0';
+  signal ds1302_sio_out : std_logic := '0';
 
   signal i_scl   : std_logic;
-  signal o_scl   : std_logic;
-  signal scl_out : std_logic;
+  signal o_scl   : std_logic := '0';
+  signal scl_out : std_logic := '0';
 
   signal i_sda   : std_logic;
-  signal o_sda   : std_logic;
-  signal sda_out : std_logic;
+  signal o_sda   : std_logic := '0';
+  signal sda_out : std_logic := '0';
 
-  signal i_cmos_sdat   : std_logic;
-  signal o_cmos_sdat   : std_logic;
-  signal cmos_sdat_out : std_logic;
+  signal i_cam_sdat   : std_logic;
+  signal o_cam_sdat   : std_logic := '0';
+  signal cam_sdat_out : std_logic := '0';
 
 begin  -- ax309_top_rtl
 
@@ -188,8 +186,8 @@ begin  -- ax309_top_rtl
   o_cam_pwdn  <= '0';
   o_cam_xclk  <= '0';
 
-  o_cmos_sclk  <= '0';
-  io_cmos_sdat <= o_cmos_sdat when cmos_sdat_out = '1' else 'Z';
-  i_cmos_sdat  <= io_cmos_sdat;
+  o_cam_sclk  <= '0';
+  io_cam_sdat <= o_cam_sdat when cam_sdat_out = '1' else 'Z';
+  i_cam_sdat  <= io_cam_sdat;
 
 end ax309_top_rtl;

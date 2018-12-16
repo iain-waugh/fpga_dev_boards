@@ -188,8 +188,8 @@ NET i_cam_d<5>      LOC = G12 | IOSTANDARD = "LVCMOS33";  ## J5  PIN12
 NET i_cam_d<6>      LOC = F12 | IOSTANDARD = "LVCMOS33";  ## J5  PIN13
 NET i_cam_d<7>      LOC = H14 | IOSTANDARD = "LVCMOS33";  ## J5  PIN14
 
-NET o_cmos_sclk     LOC = K12 | IOSTANDARD = "LVCMOS33";  ## J5  PIN3
-NET io_cmos_sdat    LOC = L14 | IOSTANDARD = "LVCMOS33";  ## J5  PIN4
+NET o_cam_sclk     LOC = K12 | IOSTANDARD = "LVCMOS33";  ## J5  PIN3
+NET io_cam_sdat    LOC = L14 | IOSTANDARD = "LVCMOS33";  ## J5  PIN4
 
 
 ###############################################################################
