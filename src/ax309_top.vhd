@@ -109,11 +109,11 @@ architecture ax309_top_rtl of ax309_top is
   signal ds1302_sio_out : std_logic := '0';
 
   signal i_i2c_scl   : std_logic;
-  signal o_i2c_scl   : std_logic := '0';
+  signal o_i2c_scl   : std_logic := '1';
   signal i2c_scl_out : std_logic := '0';
 
   signal i_i2c_sda   : std_logic;
-  signal o_i2c_sda   : std_logic := '0';
+  signal o_i2c_sda   : std_logic := '1';
   signal i2c_sda_out : std_logic := '0';
 
   signal i_cam_sdat   : std_logic;
