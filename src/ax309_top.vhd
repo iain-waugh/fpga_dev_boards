@@ -3,15 +3,14 @@
 -- Copyright (c) 2018 CadHut
 -- All rights reserved.
 --
--- Redistribution and use in source and binary forms (with or without
--- modification) is not permitted.
---
 -------------------------------------------------------------------------------
--- Project Name  : CadHut AX309 Demo
+-- Project Name  : CadHut AX309 Template
 -- Author(s)     : Iain
 -- File Name     : ax309_top.vhd
 --
--- Top level file for the AX309 Spartan 6 LX9 evaluation board
+-- Top level template for the AX309 Spartan 6 LX9 evaluation board.
+-- This file and the accompanying UCF can be used to start a project for
+-- the board.
 --
 -------------------------------------------------------------------------------
 
