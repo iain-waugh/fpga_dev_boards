@@ -139,7 +139,7 @@ NET io_ds1302_sio   LOC = D14 | IOSTANDARD = "LVCMOS33";  ##
 ###############################################################################
 #Buzzer pin
 
-NET o_buzz_out      LOC = J11 | IOSTANDARD = "LVCMOS33";  ##  Buzzer output
+NET o_buzz_out_n    LOC = J11 | IOSTANDARD = "LVCMOS33";  ##  Buzzer output
 
 
 ###############################################################################
@@ -152,21 +152,21 @@ NET io_i2c_sda          LOC = P12 | IOSTANDARD = "LVCMOS33";
 ###############################################################################
 # 6x7 Segment Display Interface pins
 
-NET o_smg_data<0>   LOC = C7  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<1>   LOC = E6  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<2>   LOC = C5  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<3>   LOC = F7  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<4>   LOC = D6  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<5>   LOC = E7  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<6>   LOC = D5  | IOSTANDARD = "LVCMOS33";  ##
-NET o_smg_data<7>   LOC = C6  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<0> LOC = C7  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<1> LOC = E6  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<2> LOC = C5  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<3> LOC = F7  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<4> LOC = D6  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<5> LOC = E7  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<6> LOC = D5  | IOSTANDARD = "LVCMOS33";  ##
+NET o_smg_data_n<7> LOC = C6  | IOSTANDARD = "LVCMOS33";  ##
 
-NET o_scan_sig<5>   LOC = D9  | IOSTANDARD = "LVCMOS33";  ##
-NET o_scan_sig<4>   LOC = E10 | IOSTANDARD = "LVCMOS33";  ##
-NET o_scan_sig<3>   LOC = F10 | IOSTANDARD = "LVCMOS33";  ##
-NET o_scan_sig<2>   LOC = F9  | IOSTANDARD = "LVCMOS33";  ##
-NET o_scan_sig<1>   LOC = E8  | IOSTANDARD = "LVCMOS33";  ##
-NET o_scan_sig<0>   LOC = D8  | IOSTANDARD = "LVCMOS33";  ##
+NET o_scan_sig_n<5> LOC = D9  | IOSTANDARD = "LVCMOS33";  ##
+NET o_scan_sig_n<4> LOC = E10 | IOSTANDARD = "LVCMOS33";  ##
+NET o_scan_sig_n<3> LOC = F10 | IOSTANDARD = "LVCMOS33";  ##
+NET o_scan_sig_n<2> LOC = F9  | IOSTANDARD = "LVCMOS33";  ##
+NET o_scan_sig_n<1> LOC = E8  | IOSTANDARD = "LVCMOS33";  ##
+NET o_scan_sig_n<0> LOC = D8  | IOSTANDARD = "LVCMOS33";  ##
 
 
 ###############################################################################

@@ -4,8 +4,8 @@
 -- All rights reserved.
 --
 -------------------------------------------------------------------------------
--- Project Name  : CadHut AX309 Template
--- Author(s)     : Iain
+-- Project Name  : AX309 Project
+-- Author(s)     : Iain Waugh
 -- File Name     : ax309_top.vhd
 --
 -- Top level template for the AX309 Spartan 6 LX9 evaluation board.
@@ -25,9 +25,9 @@ entity ax309_top is
 
     ---------------------------------------------------------------------------
     -- Miscellaneous
-    o_led      : out std_logic_vector(3 downto 0);  -- LEDs
-    i_key_in   : in  std_logic_vector(3 downto 0);  -- Pushbutton pins
-    o_buzz_out : out std_logic;                     -- Loud!
+    o_led        : out std_logic_vector(3 downto 0);  -- LEDs
+    i_key_in     : in  std_logic_vector(3 downto 0);  -- Pushbutton pins
+    o_buzz_out_n : out std_logic;                     -- Loud!
 
     ---------------------------------------------------------------------------
     -- SDRAM
@@ -82,8 +82,8 @@ entity ax309_top is
 
     ---------------------------------------------------------------------------
     -- 6x7 Segment Display Interface
-    o_smg_data : out std_logic_vector(7 downto 0);
-    o_scan_sig : out std_logic_vector(5 downto 0);
+    o_smg_data_n : out std_logic_vector(7 downto 0);
+    o_scan_sig_n : out std_logic_vector(5 downto 0);
 
     ---------------------------------------------------------------------------
     -- OV2640/OV5640/OV7670 Camera
@@ -122,8 +122,8 @@ architecture ax309_top_rtl of ax309_top is
 
 begin  -- ax309_top_rtl
 
-  o_led      <= (others => '0');        -- LEDs
-  o_buzz_out <= '0';                    -- Loud when '1'!
+  o_led        <= (others => '0');      -- LEDs
+  o_buzz_out_n <= '1';                  -- Loud when '0'!
 
   ---------------------------------------------------------------------------
   -- SDRAM
@@ -175,8 +175,8 @@ begin  -- ax309_top_rtl
 
   ---------------------------------------------------------------------------
   -- 6x7 Segment Display Interface
-  o_smg_data <= (others => '0');
-  o_scan_sig <= (others => '0');
+  o_smg_data_n <= (others => '1');
+  o_scan_sig_n <= (others => '1');
 
   ---------------------------------------------------------------------------
   -- OV2640/OV5640/OV7670 Camera
