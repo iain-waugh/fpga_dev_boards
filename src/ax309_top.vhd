@@ -120,9 +120,42 @@ architecture ax309_top_rtl of ax309_top is
   signal o_cam_sdat   : std_logic := '0';
   signal cam_sdat_out : std_logic := '0';
 
+  -- Internal timing pulses
+  -- 8 = 100ns, 1us, 10us, 100us, 1ms, 10ms, 100ms, 1s
+  constant C_POWERS_OF_100NS  : natural := 8;
+  signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
+
+  signal led : std_logic_vector(o_led'range);
+
 begin  -- ax309_top_rtl
 
-  o_led        <= (others => '0');      -- LEDs
+  u_pulse_gen : entity work.pulse_gen
+    generic map (
+      -- How many timers do you want?
+      G_POWERS_OF_100NS => C_POWERS_OF_100NS,
+
+      -- How many clocks cycles in the 1st 100ns pulse?
+      G_CLKS_IN_100NS => 5,            -- for a 50MHz clock
+
+      -- Do you want the output pulses to be aligned with each-other?
+      G_ALIGN_OUTPUTS => true)
+    port map (
+      -- Clock and Reset signals
+      clk => clk_50mhz,
+      rst => '0',
+
+      o_pulse_at_100ns_x_10e => pulse_at_100ns_x_10e);
+
+  u_hello_world : entity work.hello_world
+    port map (
+      -- Clock and Reset signals
+      clk => clk_50mhz,
+
+      i_pulse  => pulse_at_100ns_x_10e(7),
+      o_toggle => o_led(0));
+
+  o_led(o_led'high downto 1) <= (others => '0');  -- LEDs
+
   o_buzz_out_n <= '1';                  -- Loud when '0'!
 
   ---------------------------------------------------------------------------
