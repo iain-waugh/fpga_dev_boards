@@ -6,7 +6,7 @@
 -------------------------------------------------------------------------------
 -- Project Name  : AX309 Project
 -- Author(s)     : Iain Waugh
--- File Name     : ax309_top.vhd
+-- File Name     : ax309_board.vhd
 --
 -- Top level template for the AX309 Spartan 6 LX9 evaluation board.
 -- This file and the accompanying UCF can be used to start a project for
@@ -17,7 +17,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity ax309_top is
+entity ax309_board is
   port(
     -- Clock and Reset signals
     clk_50mhz : in std_logic;
@@ -99,9 +99,9 @@ entity ax309_top is
     o_cam_sclk  : out   std_logic;
     io_cam_sdat : inout std_logic
     );
-end ax309_top;
+end ax309_board;
 
-architecture ax309_top_rtl of ax309_top is
+architecture ax309_board_rtl of ax309_board is
 
   -- Tristate breakout signals
   signal i_ds1302_sio   : std_logic;
@@ -127,7 +127,7 @@ architecture ax309_top_rtl of ax309_top is
 
   signal led : std_logic_vector(o_led'range);
 
-begin  -- ax309_top_rtl
+begin  -- ax309_board_rtl
 
   u_pulse_gen : entity work.pulse_gen
     generic map (
@@ -222,4 +222,4 @@ begin  -- ax309_top_rtl
   io_cam_sdat <= o_cam_sdat when cam_sdat_out = '1' else 'Z';
   i_cam_sdat  <= io_cam_sdat;
 
-end ax309_top_rtl;
+end ax309_board_rtl;
