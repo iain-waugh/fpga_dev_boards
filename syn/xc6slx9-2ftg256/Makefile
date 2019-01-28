@@ -32,7 +32,8 @@ BIT_FLAGS = -intstyle xflow -w
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 00 - Make everything
-all: synth ngd map ngd bit
+# typing 'make' by itself runs the first target entry in the makefile
+all: synth ngd map par bit
 
 clean: clean_bit
 
