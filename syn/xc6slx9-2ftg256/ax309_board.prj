@@ -1,0 +1,10 @@
+# Common project files
+vhdl work "../../src/common/pkg/util_pkg.vhd"
+vhdl work "../../src/common/delay_sl/delay_sl.vhd"
+vhdl work "../../src/common/pulse_gen/pulse_gen.vhd"
+
+# Hello World
+vhdl work "../../src/hello_world/hello_world.vhd"
+
+# Main file
+vhdl work "../../src/ax309_board.vhd"

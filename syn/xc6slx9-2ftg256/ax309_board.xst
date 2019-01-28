@@ -1,0 +1,8 @@
+run
+-ifn ax309_board.prj
+-ofn ax309_board
+-ofmt NGC
+-p xc6slx9-2-ftg256
+-top ax309_board
+-opt_mode Speed
+-opt_level 1
