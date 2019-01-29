@@ -3,9 +3,6 @@
 -- Copyright (c) 2015 CadHut
 -- All rights reserved.
 --
--- Redistribution and use in source and binary forms (with or without
--- modification) is not permitted.
---
 -------------------------------------------------------------------------------
 -- Project Name  : Common Code
 -- Author(s)     : Iain Waugh

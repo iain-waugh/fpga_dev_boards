@@ -3,8 +3,6 @@
 -- Copyright (c) 2017 CadHut
 -- All rights reserved.
 --
--- Redistribution and use of this file is permitted.
---
 -------------------------------------------------------------------------------
 -- Project Name  : CadHut Training: 16 - Inferring Logic
 -- Author(s)     : Iain Waugh
