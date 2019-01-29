@@ -16,6 +16,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity ax309_board is
   port(
@@ -45,12 +46,12 @@ entity ax309_board is
 
     ---------------------------------------------------------------------------
     -- VGA
-    o_vga_red   : out std_logic_vector(4 downto 0);
-    o_vga_green : out std_logic_vector(5 downto 0);
-    o_vga_blue  : out std_logic_vector(4 downto 0);
-
     o_vga_hs : out std_logic;
     o_vga_vs : out std_logic;
+
+    o_vga_red   : out unsigned(4 downto 0);
+    o_vga_green : out unsigned(5 downto 0);
+    o_vga_blue  : out unsigned(4 downto 0);
 
     ---------------------------------------------------------------------------
     -- SD Card Connector
