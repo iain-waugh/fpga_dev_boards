@@ -5,7 +5,7 @@
 --
 -------------------------------------------------------------------------------
 -- Project Name  : AX309 Project
--- Author(s)     : Iain
+-- Author(s)     : Iain Waugh
 -- File Name     : pulse_gen.vhd
 --
 -- Create a set of pulses that go off at intervals of 100ns, 1us, etc.
@@ -54,10 +54,12 @@ architecture pulse_gen of pulse_gen is
 
 begin  -- pulse_gen
 
-  -- Assertion checks
+  ----------------------------------------------------------------------
+  -- Assertion checking for valid settings
   assert (G_POWERS_OF_100NS >= 1)
     report "G_POWERS_OF_100NS must be 1 or higher" severity error;
 
+  
   ----------------------------------------------------------------------
   -- Create the 100ns pulse
   process (clk)
@@ -82,6 +84,7 @@ begin  -- pulse_gen
     end if;
   end process;
 
+  
   ----------------------------------------------------------------------
   -- Create the rest of the pulses
   gen_powers : for i in 1 to G_POWERS_OF_100NS - 1 generate
@@ -112,6 +115,9 @@ begin  -- pulse_gen
 
   end generate;
 
+
+  ----------------------------------------------------------------------
+  -- Create delays or pass the signals straight out
   gen_delays : if (G_ALIGN_OUTPUTS = true) generate
     gen_loop : for i in 0 to G_POWERS_OF_100NS - 1 generate
       delay_sl : entity work.delay_sl
