@@ -129,13 +129,36 @@ architecture ax309_board_rtl of ax309_board is
 
 begin  -- ax309_board_rtl
 
+  -- Connect 3x buttons to 3x LEDs
+  key_1_debounce : entity work.debounce
+    port map (
+      clk         => clk_50mhz,
+      i_button    => i_key_in(0),
+      i_pulse     => pulse_at_100ns_x_10e(3),
+      o_debounced => o_led(0));
+
+  key_2_debounce : entity work.debounce
+    port map (
+      clk         => clk_50mhz,
+      i_button    => i_key_in(1),
+      i_pulse     => pulse_at_100ns_x_10e(3),
+      o_debounced => o_led(1));
+
+  key_3_debounce : entity work.debounce
+    port map (
+      clk         => clk_50mhz,
+      i_button    => i_key_in(2),
+      i_pulse     => pulse_at_100ns_x_10e(3),
+      o_debounced => o_led(2));
+
+  -- Make the "Hello  world" LED blink
   u_pulse_gen : entity work.pulse_gen
     generic map (
       -- How many timers do you want?
       G_POWERS_OF_100NS => C_POWERS_OF_100NS,
 
       -- How many clocks cycles in the 1st 100ns pulse?
-      G_CLKS_IN_100NS => 5,            -- for a 50MHz clock
+      G_CLKS_IN_100NS => 5,             -- for a 50MHz clock
 
       -- Do you want the output pulses to be aligned with each-other?
       G_ALIGN_OUTPUTS => true)
@@ -152,9 +175,7 @@ begin  -- ax309_board_rtl
       clk => clk_50mhz,
 
       i_pulse  => pulse_at_100ns_x_10e(7),
-      o_toggle => o_led(0));
-
-  o_led(o_led'high downto 1) <= (others => '0');  -- LEDs
+      o_toggle => o_led(3));
 
   o_buzz_out_n <= '1';                  -- Loud when '0'!
 
