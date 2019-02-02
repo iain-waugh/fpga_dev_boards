@@ -15,8 +15,8 @@ DEVICE  = xc6slx9-2ftg256
 # =========================================================================
 # Xilinx ISE flags - see UG628 v14.7
 NGD_FLAGS = -intstyle xflow -dd ./__ngo -aul -aut -verbose
-MAP_FLAGS = -intstyle xflow -ol high -detail
-PAR_FLAGS = -intstyle xflow -ol high
+MAP_FLAGS = -intstyle xflow -ol high -detail -w
+PAR_FLAGS = -intstyle xflow -ol high -w
 BIT_FLAGS = -intstyle xflow -w
 
 
@@ -46,6 +46,8 @@ ${PROJECT}.ngc : ../../src/${PROJECT}.vhd
 	@echo
 	@echo '## --- Synthesis --- ##'
 	@echo
+	# xst [-ifn in_file_name] [-ofn out_file_name] [-intstyle] [-filter msgfilter_file_name]
+	# UG687 v14.5, page 14
 	xst -intstyle ise -ifn ${PROJECT}.xst -ofn ${PROJECT}.srp
 
 clean_synth:
@@ -135,7 +137,7 @@ ${PROJECT}.bit : ${PROJECT}.ncd
 	@echo
 	# bitgen [options] infile[.ncd] [outfile] [pcf_file.pcf]
 	# UG628 v14.7, page 223
-	bitgen -f ${PROJECT}_impact.cmd ${PROJECT}.ncd ${PROJECT}.bit
+	bitgen ${BIT_FLAGS} -f ${PROJECT}_impact.cmd ${PROJECT}.ncd ${PROJECT}.bit
 
 clean_bit: clean_par
 	@rm -f ${PROJECT}.bgn ${PROJECT}.bit ${PROJECT}.drc
