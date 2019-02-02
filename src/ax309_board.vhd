@@ -26,7 +26,7 @@ entity ax309_board is
     ---------------------------------------------------------------------------
     -- Miscellaneous
     o_led        : out std_logic_vector(3 downto 0);  -- LEDs
-    i_key_in     : in  std_logic_vector(3 downto 0);  -- Pushbutton pins
+    i_key_in_n   : in  std_logic_vector(3 downto 0);  -- Pushbutton pins
     o_buzz_out_n : out std_logic;                     -- Loud!
 
     ---------------------------------------------------------------------------
@@ -125,31 +125,37 @@ architecture ax309_board_rtl of ax309_board is
   constant C_POWERS_OF_100NS  : natural := 8;
   signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
 
-  signal led : std_logic_vector(o_led'range);
+  signal led   : std_logic_vector(o_led'range);
 
 begin  -- ax309_board_rtl
 
   -- Connect 3x buttons to 3x LEDs
   key_1_debounce : entity work.debounce
+    generic map (
+      G_INVERT_OUTPUT => true)
     port map (
       clk         => clk_50mhz,
-      i_button    => i_key_in(0),
+      i_button    => i_key_in_n(0),
       i_pulse     => pulse_at_100ns_x_10e(3),
-      o_debounced => o_led(0));
+      o_debounced => led(0));
 
   key_2_debounce : entity work.debounce
+    generic map (
+      G_INVERT_OUTPUT => true)
     port map (
       clk         => clk_50mhz,
-      i_button    => i_key_in(1),
+      i_button    => i_key_in_n(1),
       i_pulse     => pulse_at_100ns_x_10e(3),
-      o_debounced => o_led(1));
+      o_debounced => led(1));
 
   key_3_debounce : entity work.debounce
+    generic map (
+      G_INVERT_OUTPUT => true)
     port map (
       clk         => clk_50mhz,
-      i_button    => i_key_in(2),
+      i_button    => i_key_in_n(2),
       i_pulse     => pulse_at_100ns_x_10e(3),
-      o_debounced => o_led(2));
+      o_debounced => led(2));
 
   -- Make the "Hello  world" LED blink
   u_pulse_gen : entity work.pulse_gen
@@ -175,8 +181,9 @@ begin  -- ax309_board_rtl
       clk => clk_50mhz,
 
       i_pulse  => pulse_at_100ns_x_10e(7),
-      o_toggle => o_led(3));
+      o_toggle => led(3));
 
+  o_led        <= led;
   o_buzz_out_n <= '1';                  -- Loud when '0'!
 
   ---------------------------------------------------------------------------

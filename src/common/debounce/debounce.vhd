@@ -20,6 +20,9 @@ library work;
 use work.util_pkg.all;
 
 entity debounce is
+  generic (
+    G_INVERT_OUTPUT : boolean := false
+    );
   port(
     clk : in std_logic;
 
@@ -32,11 +35,12 @@ end debounce;
 
 architecture debounce_rtl of debounce is
 
-  signal button_now  : std_logic := '0';
-  signal button_last : std_logic := '0';
+  signal button_now  : std_logic := to_std_logic(G_INVERT_OUTPUT);
+  signal button_last : std_logic := to_std_logic(G_INVERT_OUTPUT);
 
   constant C_MAX_COUNT : natural := 16;
-  signal stable_count  : unsigned(clog2(C_MAX_COUNT)-1 downto 0) := (others => '0');
+
+  signal stable_count : unsigned(clog2(C_MAX_COUNT)-1 downto 0) := (others => '0');
 
 begin  -- debounce_rtl
 
@@ -66,6 +70,16 @@ begin  -- debounce_rtl
       end if;
     end if;
   end process;
-  o_debounced <= button_last;
+
+  process (clk)
+  begin
+    if (rising_edge(clk)) then
+      if (G_INVERT_OUTPUT = false) then
+        o_debounced <= button_last;
+      else
+        o_debounced <= not button_last;
+      end if;
+    end if;
+  end process;
 
 end debounce_rtl;

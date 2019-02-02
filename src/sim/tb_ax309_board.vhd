@@ -29,7 +29,7 @@ architecture tb_ax309_board_rtl of tb_ax309_board is
   ---------------------------------------------------------------------------
   -- Miscellaneous
   signal o_led        : std_logic_vector(3 downto 0);
-  signal i_key_in     : std_logic_vector(3 downto 0) := (others => '0');
+  signal i_key_in_n   : std_logic_vector(3 downto 0) := (others => '0');
   signal o_buzz_out_n : std_logic;
 
   ---------------------------------------------------------------------------
@@ -117,7 +117,7 @@ begin  -- architecture tb_ax309_board_rtl
       ---------------------------------------------------------------------------
       -- Miscellaneous
       o_led        => o_led,
-      i_key_in     => i_key_in,
+      i_key_in_n   => i_key_in_n,
       o_buzz_out_n => o_buzz_out_n,
 
       ---------------------------------------------------------------------------
