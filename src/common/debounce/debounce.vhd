@@ -4,7 +4,7 @@
 -- All rights reserved.
 --
 -------------------------------------------------------------------------------
--- Project Name  : AX309 Project
+-- Project Name  : Common Code
 -- Author(s)     : Iain Waugh
 -- File Name     : debounce.vhd
 --

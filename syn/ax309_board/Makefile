@@ -37,6 +37,7 @@ all: synth ngd map par bit
 
 clean: clean_bit
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 01 - Synthesis
 .PHONY: synth
@@ -54,6 +55,7 @@ clean_synth:
 	@rm -fR xst _xmsgs
 	@rm -f ${PROJECT}.srp ${PROJECT}.ngc
 	@rm -f ${PROJECT}.lso ${PROJECT}_xst.xrpt
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 02 - NGD (Xillinx Native Generic Database)
@@ -74,6 +76,7 @@ clean_ngd: clean_synth
 	@rm -fR __ngo xlnx_auto_0_xdb
 	@rm -f ${PROJECT}.bld ${PROJECT}.ngd ${PROJECT}_ngdbuild.xrpt
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 03 - MAP
 .PHONY: map
@@ -93,6 +96,7 @@ clean_map: clean_ngd
 	@rm -f ${PROJECT}.pcf ${PROJECT}_map.map ${PROJECT}_map.mrp
 	@rm -f ${PROJECT}_map.ncd ${PROJECT}_map.ngm ${PROJECT}_map.xrpt
 	@rm -f ${PROJECT}_summary.xml ${PROJECT}_usage.xml
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 04 - P&R (Place and Route)

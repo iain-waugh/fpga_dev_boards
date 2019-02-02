@@ -4,7 +4,7 @@
 -- All rights reserved.
 --
 -------------------------------------------------------------------------------
--- Project Name  : CadHut Training: 16 - Inferring Logic
+-- Project Name  : Common Code
 -- Author(s)     : Iain Waugh
 -- File Name     : delay_sl.vhd
 --

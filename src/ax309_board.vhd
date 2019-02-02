@@ -4,7 +4,7 @@
 -- All rights reserved.
 --
 -------------------------------------------------------------------------------
--- Project Name  : AX309 Project
+-- Project Name  : AX309 Dev Board
 -- Author(s)     : Iain Waugh
 -- File Name     : ax309_board.vhd
 --

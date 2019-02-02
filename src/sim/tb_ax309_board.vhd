@@ -4,7 +4,7 @@
 -- All rights reserved.
 --
 -------------------------------------------------------------------------------
--- Project Name  : AX309 Project
+-- Project Name  : FPGA Dev Board
 -- Author(s)     : Iain Waugh
 -- File Name     : tb_ax309_board.vhd
 --
