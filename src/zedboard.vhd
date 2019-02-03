@@ -41,16 +41,16 @@ entity zedboard is
 
     -- ----------------------------------------------------------------------------
     -- HDMI Output - Bank 33
-    o_hd_clk    : out   std_logic;                      -- "HD-CLK"
-    o_hd_hsync  : out   std_logic;                      -- "HD-HSYNC"
-    o_hd_vsync  : out   std_logic;                      -- "HD-VSYNC"
-    o_hd_d      : out   std_logic_vector(15 downto 0);  -- "HD-D[15:0]"
-    o_hd_de     : out   std_logic;                      -- "HD-DE"
-    o_hd_int    : out   std_logic;                      -- "HD-INT"
-    io_hd_scl   : inout std_logic;                      -- "HD-SCL"
-    io_hd_sda   : inout std_logic;                      -- "HD-SDA"
-    o_hd_spdif  : out   std_logic;                      -- "HD-SPDIF"
-    i_hd_spdifo : in    std_logic;                      -- "HD-SPDIFO"
+    o_hdmi_clk    : out   std_logic;                      -- "HD-CLK"
+    o_hdmi_hsync  : out   std_logic;                      -- "HD-HSYNC"
+    o_hdmi_vsync  : out   std_logic;                      -- "HD-VSYNC"
+    o_hdmi_data   : out   std_logic_vector(15 downto 0);  -- "HD-D[15:0]"
+    o_hdmi_dval   : out   std_logic;                      -- "HD-DE"
+    o_hdmi_int    : out   std_logic;                      -- "HD-INT"
+    io_hdmi_scl   : inout std_logic;                      -- "HD-SCL"
+    io_hdmi_sda   : inout std_logic;                      -- "HD-SDA"
+    o_hdmi_spdif  : out   std_logic;                      -- "HD-SPDIF"
+    i_hdmi_spdifo : in    std_logic;                      -- "HD-SPDIFO"
 
     -- ----------------------------------------------------------------------------
     -- User LEDs - Bank 33
@@ -66,11 +66,11 @@ entity zedboard is
 
     -- ----------------------------------------------------------------------------
     -- User Push Buttons - Bank 34
-    i_btnc : in std_logic;              -- "BTNC"
-    i_btnd : in std_logic;              -- "BTND"
-    i_btnl : in std_logic;              -- "BTNL"
-    i_btnr : in std_logic;              -- "BTNR"
-    i_btnu : in std_logic;              -- "BTNU"
+    i_btn_c : in std_logic;             -- "BTNC"
+    i_btn_d : in std_logic;             -- "BTND"
+    i_btn_l : in std_logic;             -- "BTNL"
+    i_btn_r : in std_logic;             -- "BTNR"
+    i_btn_u : in std_logic;             -- "BTNU"
 
     -- ----------------------------------------------------------------------------
     -- USB OTG Reset - Bank 34
@@ -120,13 +120,13 @@ architecture zedboard_rtl of zedboard is
   signal o_audio_sda   : std_logic;
   signal audio_sda_out : std_logic;
 
-  signal i_hd_scl   : std_logic;
-  signal o_hd_scl   : std_logic;
-  signal hd_scl_out : std_logic;
+  signal i_hdmi_scl   : std_logic;
+  signal o_hdmi_scl   : std_logic;
+  signal hdmi_scl_out : std_logic;
 
-  signal i_hd_sda   : std_logic;
-  signal o_hd_sda   : std_logic;
-  signal hd_sda_out : std_logic;
+  signal i_hdmi_sda   : std_logic;
+  signal o_hdmi_sda   : std_logic;
+  signal hdmi_sda_out : std_logic;
 
   signal i_xadc_gio   : std_logic_vector(3 downto 0);
   signal o_xadc_gio   : std_logic_vector(3 downto 0);
@@ -144,8 +144,8 @@ begin  -- zedboard_rtl
 
   -- ----------------------------------------------------------------------------
   -- Audio Codec - Bank 13 - Connects to ADAU1761BCPZ
-  o_audio_mclk  <= '0';
-  o_audio_sck   <= '0';
+  o_audio_mclk <= '0';
+  o_audio_sck  <= '0';
 
   i_audio_gpio  <= io_audio_gpio;
   io_audio_gpio <= o_audio_gpio when audio_gpio_out = '1' else (others => 'Z');
@@ -164,19 +164,19 @@ begin  -- zedboard_rtl
 
   -- ----------------------------------------------------------------------------
   -- HDMI Output - Bank 33
-  o_hd_clk   <= '0';
-  o_hd_hsync <= '0';
-  o_hd_vsync <= '0';
-  o_hd_d     <= (others => '0');
-  o_hd_de    <= '0';
-  o_hd_int   <= '0';
-  o_hd_spdif <= '0';
+  o_hdmi_clk   <= '0';
+  o_hdmi_hsync <= '0';
+  o_hdmi_vsync <= '0';
+  o_hdmi_data  <= (others => '0');
+  o_hdmi_dval  <= '0';
+  o_hdmi_int   <= '0';
+  o_hdmi_spdif <= '0';
 
-  i_hd_scl  <= io_hd_scl;
-  io_hd_scl <= o_hd_scl when hd_scl_out = '1' else 'Z';
+  i_hdmi_scl  <= io_hdmi_scl;
+  io_hdmi_scl <= o_hdmi_scl when hdmi_scl_out = '1' else 'Z';
 
-  i_hd_sda  <= io_hd_sda;
-  io_hd_sda <= o_hd_sda when hd_sda_out = '1' else 'Z';
+  i_hdmi_sda  <= io_hdmi_sda;
+  io_hdmi_sda <= o_hdmi_sda when hdmi_sda_out = '1' else 'Z';
 
   -- ----------------------------------------------------------------------------
   -- User LEDs - Bank 33
