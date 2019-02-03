@@ -58,8 +58,8 @@ entity zedboard is
 
     -- ----------------------------------------------------------------------------
     -- VGA Output - Bank 33
-    o_vga_hs    : out std_logic;                     -- "VGA-HS"
-    o_vga_vs    : out std_logic;                     -- "VGA-VS"
+    o_vga_hs    : out std_logic;             -- "VGA-HS"
+    o_vga_vs    : out std_logic;             -- "VGA-VS"
     o_vga_red   : out unsigned(3 downto 0);  -- "VGA-R[3:0]"
     o_vga_green : out unsigned(3 downto 0);  -- "VGA-G[3:0]"
     o_vga_blue  : out unsigned(3 downto 0);  -- "VGA-B[3:0]"
@@ -112,7 +112,97 @@ end zedboard;
 
 architecture zedboard_rtl of zedboard is
 
+  signal i_audio_gpio   : std_logic_vector(3 downto 0);
+  signal o_audio_gpio   : std_logic_vector(3 downto 0);
+  signal audio_gpio_out : std_logic;
+
+  signal i_audio_sda   : std_logic;
+  signal o_audio_sda   : std_logic;
+  signal audio_sda_out : std_logic;
+
+  signal i_hd_scl   : std_logic;
+  signal o_hd_scl   : std_logic;
+  signal hd_scl_out : std_logic;
+
+  signal i_hd_sda   : std_logic;
+  signal o_hd_sda   : std_logic;
+  signal hd_sda_out : std_logic;
+
+  signal i_xadc_gio   : std_logic_vector(3 downto 0);
+  signal o_xadc_gio   : std_logic_vector(3 downto 0);
+  signal xadc_gio_out : std_logic;
+
+  signal i_fmc_scl   : std_logic;
+  signal o_fmc_scl   : std_logic;
+  signal fmc_scl_out : std_logic;
+
+  signal i_fmc_sda   : std_logic;
+  signal o_fmc_sda   : std_logic;
+  signal fmc_sda_out : std_logic;
+
 begin  -- zedboard_rtl
 
+  -- ----------------------------------------------------------------------------
+  -- Audio Codec - Bank 13 - Connects to ADAU1761BCPZ
+  o_audio_mclk  <= '0';
+  o_audio_sck   <= '0';
+
+  i_audio_gpio  <= io_audio_gpio;
+  io_audio_gpio <= o_audio_gpio when audio_gpio_out = '1' else (others => 'Z');
+
+  i_audio_sda  <= io_audio_sda;
+  io_audio_sda <= o_audio_sda when audio_sda_out = '1' else 'Z';
+
+  -- ----------------------------------------------------------------------------
+  -- OLED Display - Bank 13
+  o_oled_dc   <= '0';
+  o_oled_res  <= '0';
+  o_oled_sclk <= '0';
+  o_oled_sdin <= '0';
+  o_oled_vbat <= '0';
+  o_oled_vdd  <= '0';
+
+  -- ----------------------------------------------------------------------------
+  -- HDMI Output - Bank 33
+  o_hd_clk   <= '0';
+  o_hd_hsync <= '0';
+  o_hd_vsync <= '0';
+  o_hd_d     <= (others => '0');
+  o_hd_de    <= '0';
+  o_hd_int   <= '0';
+  o_hd_spdif <= '0';
+
+  i_hd_scl  <= io_hd_scl;
+  io_hd_scl <= o_hd_scl when hd_scl_out = '1' else 'Z';
+
+  i_hd_sda  <= io_hd_sda;
+  io_hd_sda <= o_hd_sda when hd_sda_out = '1' else 'Z';
+
+  -- ----------------------------------------------------------------------------
+  -- User LEDs - Bank 33
+  o_led <= (others => '0');
+
+  -- ----------------------------------------------------------------------------
+  -- VGA Output - Bank 33
+  o_vga_hs    <= '0';
+  o_vga_vs    <= '0';
+  o_vga_red   <= (others => '0');
+  o_vga_green <= (others => '0');
+  o_vga_blue  <= (others => '0');
+
+  i_xadc_gio  <= io_xadc_gio;
+  io_xadc_gio <= o_xadc_gio when xadc_gio_out = '1' else (others => 'Z');
+
+  -- ----------------------------------------------------------------------------
+  -- USB OTG Reset - Bank 35
+  o_otg_reset_n <= '0';
+
+  -- ----------------------------------------------------------------------------
+  -- FMC Expansion Connector - Bank 13
+  i_fmc_scl  <= io_fmc_scl;
+  io_fmc_scl <= o_fmc_scl when fmc_scl_out = '1' else 'Z';
+
+  i_fmc_sda  <= io_fmc_sda;
+  io_fmc_sda <= o_fmc_sda when fmc_sda_out = '1' else 'Z';
 
 end zedboard_rtl;
