@@ -48,54 +48,50 @@ begin
   -----------------------------------------------------------------------------
   -- 1 clock delay: Just register it once
   u_delay_1clk : if G_DELAY = 1 generate
-    delay_block : block is
-      -- Define local signals
-      signal data : std_logic;
-    begin  -- block
+    -- Define local signals
+    signal data : std_logic;
+  begin
 
-      process (clk)
-      begin
-        if (rising_edge(clk)) then
-          if (en = '1') then
-            data <= i_data;
-          end if;
+    process (clk)
+    begin
+      if (rising_edge(clk)) then
+        if (en = '1') then
+          data <= i_data;
         end if;
-      end process;
-      o_data <= data;
+      end if;
+    end process;
+    o_data <= data;
 
-    end block delay_block;
   end generate u_delay_1clk;
 
   -----------------------------------------------------------------------------
   -- n clock delays: All bits are in a shif-register except for
   --                 the last bit, which is registered
   u_delay_n_clks : if G_DELAY > 1 generate
-    delay_block : block is
-      -- Define local signals
-      type t_delay_line is array (1 to G_DELAY - 1) of std_logic;
-      signal sreg : t_delay_line := (others => '0');
-    begin  -- block
+    -- Define local signals
+    type t_delay_line is array (1 to G_DELAY - 1) of std_logic;
+    signal sreg : t_delay_line := (others => '0');
+  begin  -- block
 
-      process (clk)
-      begin
-        if (rising_edge(clk)) then
-          if (en = '1') then
-            sreg <= i_data & sreg(1 to sreg'high - 1);
-          end if;
+    process (clk)
+    begin
+      if (rising_edge(clk)) then
+        if (en = '1') then
+          sreg <= i_data & sreg(1 to sreg'high - 1);
         end if;
-      end process;
+      end if;
+    end process;
 
-      -- Register the last bit for better fMax
-      process (clk)
-      begin
-        if (rising_edge(clk)) then
-          if (en = '1') then
-            o_data <= sreg(sreg'high);
-          end if;
+    -- Register the last bit for better fMax
+    process (clk)
+    begin
+      if (rising_edge(clk)) then
+        if (en = '1') then
+          o_data <= sreg(sreg'high);
         end if;
-      end process;
+      end if;
+    end process;
 
-    end block delay_block;
   end generate u_delay_n_clks;
 
 end delay_sl_rtl;
