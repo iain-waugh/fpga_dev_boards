@@ -24,7 +24,8 @@ entity zedboard is
 
     ----------------------------------------------------------------------------
     -- Audio Codec - Bank 13 - Connects to ADAU1761BCPZ
-    i_audio_adr   : in    std_logic_vector(1 downto 0);  -- "AC-ADR[1:0]"
+    i_audio_adr0  : in    std_logic;  -- "AC-ADR0"
+    o_audio_adr1  : out   std_logic;  -- "AC-ADR1"
     io_audio_gpio : inout std_logic_vector(3 downto 0);  -- "AC-GPIO[3:0]"
     o_audio_mclk  : out   std_logic;                     -- "AC-MCLK"
     o_audio_sck   : out   std_logic;                     -- "AC-SCK"
@@ -118,32 +119,32 @@ architecture zedboard_rtl of zedboard is
   signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
 
   signal i_audio_gpio   : std_logic_vector(3 downto 0);
-  signal o_audio_gpio   : std_logic_vector(3 downto 0);
-  signal audio_gpio_out : std_logic;
+  signal o_audio_gpio   : std_logic_vector(3 downto 0) := (others => '0');
+  signal audio_gpio_out : std_logic := '0';
 
   signal i_audio_sda   : std_logic;
-  signal o_audio_sda   : std_logic;
-  signal audio_sda_out : std_logic;
+  signal o_audio_sda   : std_logic := '0';
+  signal audio_sda_out : std_logic := '0';
 
   signal i_hdmi_scl   : std_logic;
-  signal o_hdmi_scl   : std_logic;
-  signal hdmi_scl_out : std_logic;
+  signal o_hdmi_scl   : std_logic := '0';
+  signal hdmi_scl_out : std_logic := '0';
 
   signal i_hdmi_sda   : std_logic;
-  signal o_hdmi_sda   : std_logic;
-  signal hdmi_sda_out : std_logic;
+  signal o_hdmi_sda   : std_logic := '0';
+  signal hdmi_sda_out : std_logic := '0';
 
   signal i_xadc_gio   : std_logic_vector(3 downto 0);
-  signal o_xadc_gio   : std_logic_vector(3 downto 0);
-  signal xadc_gio_out : std_logic;
+  signal o_xadc_gio   : std_logic_vector(3 downto 0) := (others =>'0');
+  signal xadc_gio_out : std_logic := '0';
 
   signal i_fmc_scl   : std_logic;
-  signal o_fmc_scl   : std_logic;
-  signal fmc_scl_out : std_logic;
+  signal o_fmc_scl   : std_logic := '0';
+  signal fmc_scl_out : std_logic := '0';
 
   signal i_fmc_sda   : std_logic;
-  signal o_fmc_sda   : std_logic;
-  signal fmc_sda_out : std_logic;
+  signal o_fmc_sda   : std_logic := '0';
+  signal fmc_sda_out : std_logic := '0';
 
 begin  -- zedboard_rtl
 
@@ -178,6 +179,7 @@ begin  -- zedboard_rtl
 
   ----------------------------------------------------------------------------
   -- Audio Codec - Bank 13 - Connects to ADAU1761BCPZ
+  o_audio_adr1 <= '0';
   o_audio_mclk <= '0';
   o_audio_sck  <= '0';
 
@@ -225,6 +227,7 @@ begin  -- zedboard_rtl
 
   ----------------------------------------------------------------------------
   -- USB OTG Reset - Bank 35
+  o_otg_vbusoc <= '0';
   o_otg_reset_n <= '0';
 
   ----------------------------------------------------------------------------
