@@ -1,6 +1,7 @@
 # Common project files
 vhdl work "../../src/common/pkg/util_pkg.vhd"
 vhdl work "../../src/common/sync_sl/sync_sl.vhd"
+vhdl work "../../src/common/clk_gen/clk_gen_s6.vhd"
 vhdl work "../../src/common/delay_sl/delay_sl.vhd"
 vhdl work "../../src/common/pulse_gen/pulse_gen.vhd"
 vhdl work "../../src/common/debounce/debounce.vhd"

@@ -103,6 +103,9 @@ end ax309_board;
 
 architecture ax309_board_rtl of ax309_board is
 
+  signal clk_250mhz : std_logic := '0';
+  signal rst_250mhz : std_logic := '0';
+
   -- Tristate breakout signals
   signal i_ds1302_sio   : std_logic;
   signal o_ds1302_sio   : std_logic := '0';
@@ -125,16 +128,42 @@ architecture ax309_board_rtl of ax309_board is
   constant C_POWERS_OF_100NS  : natural := 8;
   signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
 
-  signal led   : std_logic_vector(o_led'range);
+  signal led : std_logic_vector(o_led'range);
 
 begin  -- ax309_board_rtl
+
+  u_clk_gen : entity work.clk_gen
+    generic map (
+      G_CLOCKS_USED    => 1,
+      G_CLKIN_PERIOD   => 20.0,         -- 20ns for a 50MHz clock
+      G_CLKFBOUT_MULT  => 10,
+      G_CLKOUT0_DIVIDE => 2)
+    port map (
+      -- Clock and Reset input signals
+      clk => clk_50mhz,
+      rst => '0',                       -- No reset input
+
+      -- Clock and reset output signals
+      o_clk_0 => clk_250mhz,
+      o_rst_0 => rst_250mhz,
+
+      o_clk_1 => open,
+      o_rst_1 => open,
+      o_clk_2 => open,
+      o_rst_2 => open,
+      o_clk_3 => open,
+      o_rst_3 => open,
+      o_clk_4 => open,
+      o_rst_4 => open,
+      o_clk_5 => open,
+      o_rst_5 => open);
 
   -- Connect 3x buttons to 3x LEDs
   key_1_debounce : entity work.debounce
     generic map (
       G_INVERT_OUTPUT => true)
     port map (
-      clk         => clk_50mhz,
+      clk         => clk_250mhz,
       i_button    => i_key_in_n(0),
       i_pulse     => pulse_at_100ns_x_10e(3),
       o_debounced => led(0));
@@ -143,7 +172,7 @@ begin  -- ax309_board_rtl
     generic map (
       G_INVERT_OUTPUT => true)
     port map (
-      clk         => clk_50mhz,
+      clk         => clk_250mhz,
       i_button    => i_key_in_n(1),
       i_pulse     => pulse_at_100ns_x_10e(3),
       o_debounced => led(1));
@@ -152,7 +181,7 @@ begin  -- ax309_board_rtl
     generic map (
       G_INVERT_OUTPUT => true)
     port map (
-      clk         => clk_50mhz,
+      clk         => clk_250mhz,
       i_button    => i_key_in_n(2),
       i_pulse     => pulse_at_100ns_x_10e(3),
       o_debounced => led(2));
@@ -164,13 +193,13 @@ begin  -- ax309_board_rtl
       G_POWERS_OF_100NS => C_POWERS_OF_100NS,
 
       -- How many clocks cycles in the 1st 100ns pulse?
-      G_CLKS_IN_100NS => 5,             -- for a 50MHz clock
+      G_CLKS_IN_100NS => 25,             -- for a 250MHz clock
 
       -- Do you want the output pulses to be aligned with each-other?
       G_ALIGN_OUTPUTS => true)
     port map (
       -- Clock and Reset signals
-      clk => clk_50mhz,
+      clk => clk_250mhz,
       rst => '0',
 
       o_pulse_at_100ns_x_10e => pulse_at_100ns_x_10e);
@@ -178,7 +207,7 @@ begin  -- ax309_board_rtl
   u_hello_world : entity work.hello_world
     port map (
       -- Clock and Reset signals
-      clk => clk_50mhz,
+      clk => clk_250mhz,
 
       i_pulse  => pulse_at_100ns_x_10e(7),
       o_toggle => led(3));
