@@ -40,8 +40,6 @@ entity vga_driver is
     data_clk : in std_logic;
 
     -- Timing control signals (data_clk domain)
-    i_frame_sync : in std_logic;  -- Effectively resets the frame counters
-
     i_h_sync_time : in unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
     i_v_sync_time : in unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
 
@@ -66,8 +64,8 @@ entity vga_driver is
     i_rgb_dval  : in  std_logic;
 
     -- VGA signals (pixel_clk domain)
-    pixel_clk : in std_logic;
-    pixel_rst : in std_logic;
+    pixel_clk    : in std_logic;
+    i_frame_sync : in std_logic;  -- Effectively resets the frame counters
 
     o_vga_hs : out std_logic;
     o_vga_vs : out std_logic;
@@ -104,13 +102,29 @@ architecture vga_driver_rtl of vga_driver is
 begin  -- vga_driver_rtl
 
   ----------------------------------------------------------------------
+  -- Assertion checks for correct input values
+  -- pragma synthesis_off
+  assert i_h_sync_time = 0 report "Sync time cannot be zero" severity error;
+  assert i_v_sync_time = 0 report "Sync time cannot be zero" severity error;
+
+  assert i_h_b_porch_time = 0 report "Porch time cannot be zero" severity error;
+  assert i_h_f_porch_time = 0 report "Porch time cannot be zero" severity error;
+  assert i_v_b_porch_time = 0 report "Porch time cannot be zero" severity error;
+  assert i_v_f_porch_time = 0 report "Porch time cannot be zero" severity error;
+
+  assert i_h_pic_size >= 640 report "Min width is 640" severity error;
+  assert i_v_pic_size >= 480 report "Min height is 480" severity error;
+  -- pragma synthesis_on
+
+  ----------------------------------------------------------------------
   -- Horizontal state machine
   process (pixel_clk)
   begin
     if (rising_edge(pixel_clk)) then
-      if (pixel_rst = '1') then
-        h_state    <= sync;
-        h_state_d1 <= sync;
+      if (i_frame_sync = '1') then
+        h_sync_count <= (others => '0');
+        h_state      <= sync;
+        h_state_d1   <= sync;
       else
         case h_state is
           when sync =>
@@ -173,8 +187,9 @@ begin  -- vga_driver_rtl
   process (pixel_clk)
   begin
     if (rising_edge(pixel_clk)) then
-      if (pixel_rst = '1') then
-        v_state <= sync;
+      if (i_frame_sync = '1') then
+        v_sync_count <= (others => '0');
+        v_state      <= sync;
       else
         -- Only tick the vertical state machine around when the
         -- horizontal state goes from 'front porch' to 'sync'.
