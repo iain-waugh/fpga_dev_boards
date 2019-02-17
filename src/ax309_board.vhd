@@ -104,7 +104,12 @@ end ax309_board;
 architecture ax309_board_rtl of ax309_board is
 
   signal clk_250mhz : std_logic := '0';
-  signal rst_250mhz : std_logic := '0';
+  signal rst_250mhz : std_logic := '1';
+
+  -- Internal timing pulses
+  -- 8 = 100ns, 1us, 10us, 100us, 1ms, 10ms, 100ms, 1s
+  constant C_POWERS_OF_100NS  : natural := 8;
+  signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
 
   -- Tristate breakout signals
   signal i_ds1302_sio   : std_logic;
@@ -123,25 +128,23 @@ architecture ax309_board_rtl of ax309_board is
   signal o_cam_sdat   : std_logic := '0';
   signal cam_sdat_out : std_logic := '0';
 
-  -- Internal timing pulses
-  -- 8 = 100ns, 1us, 10us, 100us, 1ms, 10ms, 100ms, 1s
-  constant C_POWERS_OF_100NS  : natural := 8;
-  signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
-
+  -- Other system signals
   signal led : std_logic_vector(o_led'range);
 
 begin  -- ax309_board_rtl
 
+  ----------------------------------------------------------------------------
+  -- Create system clocks and resets
   u_clk_gen : entity work.clk_gen
     generic map (
       G_CLOCKS_USED    => 1,
       G_CLKIN_PERIOD   => 20.0,         -- 20ns for a 50MHz clock
-      G_CLKFBOUT_MULT  => 10,
-      G_CLKOUT0_DIVIDE => 2)
+      G_CLKFBOUT_MULT  => 10,           -- 50MHz x 10 gets a 500MHz internal PLL
+      G_CLKOUT0_DIVIDE => 2)            -- o_clk_0 = 500MHz / 2 = 250MHz
     port map (
       -- Clock and Reset input signals
       clk => clk_50mhz,
-      rst => '0',                       -- No reset input
+      rst => '0',  -- No reset input: Reset is determined by the PLL lock
 
       -- Clock and reset output signals
       o_clk_0 => clk_250mhz,
@@ -193,14 +196,14 @@ begin  -- ax309_board_rtl
       G_POWERS_OF_100NS => C_POWERS_OF_100NS,
 
       -- How many clocks cycles in the 1st 100ns pulse?
-      G_CLKS_IN_100NS => 25,             -- for a 250MHz clock
+      G_CLKS_IN_100NS => 25,            -- for a 250MHz clock
 
       -- Do you want the output pulses to be aligned with each-other?
       G_ALIGN_OUTPUTS => true)
     port map (
       -- Clock and Reset signals
       clk => clk_250mhz,
-      rst => '0',
+      rst => rst_250mhz,
 
       o_pulse_at_100ns_x_10e => pulse_at_100ns_x_10e);
 
