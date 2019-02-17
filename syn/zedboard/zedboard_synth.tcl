@@ -28,8 +28,11 @@ set_property target_language VHDL [ current_project ]
 #     (none)
 
 # Common project files
+#   Note: The Spartan 6 "BASE_PLL" in clk_gen_s6 works in a Zynq, too
 read_vhdl "../../src/common/pkg/util_pkg.vhd"
+read_vhdl "../../src/common/sync_sl/sync_sl.vhd"
 read_vhdl "../../src/common/delay_sl/delay_sl.vhd"
+read_vhdl "../../src/common/clk_gen/clk_gen_s6.vhd"
 read_vhdl "../../src/common/pulse_gen/pulse_gen.vhd"
 
 # Hello World

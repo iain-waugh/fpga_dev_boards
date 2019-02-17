@@ -24,8 +24,8 @@ entity zedboard is
 
     ----------------------------------------------------------------------------
     -- Audio Codec - Bank 13 - Connects to ADAU1761BCPZ
-    i_audio_adr0  : in    std_logic;  -- "AC-ADR0"
-    o_audio_adr1  : out   std_logic;  -- "AC-ADR1"
+    i_audio_adr0  : in    std_logic;                     -- "AC-ADR0"
+    o_audio_adr1  : out   std_logic;                     -- "AC-ADR1"
     io_audio_gpio : inout std_logic_vector(3 downto 0);  -- "AC-GPIO[3:0]"
     o_audio_mclk  : out   std_logic;                     -- "AC-MCLK"
     o_audio_sck   : out   std_logic;                     -- "AC-SCK"
@@ -113,14 +113,18 @@ end zedboard;
 
 architecture zedboard_rtl of zedboard is
 
+  signal clk_250mhz : std_logic := '0';
+  signal rst_250mhz : std_logic := '1';
+
   -- Internal timing pulses
   -- 8 = 100ns, 1us, 10us, 100us, 1ms, 10ms, 100ms, 1s
   constant C_POWERS_OF_100NS  : natural := 8;
   signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
 
+  -- Tristate breakout signals
   signal i_audio_gpio   : std_logic_vector(3 downto 0);
   signal o_audio_gpio   : std_logic_vector(3 downto 0) := (others => '0');
-  signal audio_gpio_out : std_logic := '0';
+  signal audio_gpio_out : std_logic                    := '0';
 
   signal i_audio_sda   : std_logic;
   signal o_audio_sda   : std_logic := '0';
@@ -135,8 +139,8 @@ architecture zedboard_rtl of zedboard is
   signal hdmi_sda_out : std_logic := '0';
 
   signal i_xadc_gio   : std_logic_vector(3 downto 0);
-  signal o_xadc_gio   : std_logic_vector(3 downto 0) := (others =>'0');
-  signal xadc_gio_out : std_logic := '0';
+  signal o_xadc_gio   : std_logic_vector(3 downto 0) := (others => '0');
+  signal xadc_gio_out : std_logic                    := '0';
 
   signal i_fmc_scl   : std_logic;
   signal o_fmc_scl   : std_logic := '0';
@@ -146,7 +150,38 @@ architecture zedboard_rtl of zedboard is
   signal o_fmc_sda   : std_logic := '0';
   signal fmc_sda_out : std_logic := '0';
 
+  -- Other system signals
+  -- TBD
+
 begin  -- zedboard_rtl
+
+  ----------------------------------------------------------------------------
+  -- Create system clocks and resets
+  u_clk_gen : entity work.clk_gen
+    generic map (
+      G_CLOCKS_USED    => 1,
+      G_CLKIN_PERIOD   => 10.0,         -- 10ns for a 100MHz clock
+      G_CLKFBOUT_MULT  => 10,           -- 100MHz x 10 gets a 1GHz internal PLL
+      G_CLKOUT0_DIVIDE => 4)            -- o_clk_0 = 1GHz / 4 = 250MHz
+    port map (
+      -- Clock and Reset input signals
+      clk => clk_100mhz,
+      rst => '0',  -- No reset input: Reset is determined by the PLL lock
+
+      -- Clock and reset output signals
+      o_clk_0 => clk_250mhz,
+      o_rst_0 => rst_250mhz,
+
+      o_clk_1 => open,
+      o_rst_1 => open,
+      o_clk_2 => open,
+      o_rst_2 => open,
+      o_clk_3 => open,
+      o_rst_3 => open,
+      o_clk_4 => open,
+      o_rst_4 => open,
+      o_clk_5 => open,
+      o_rst_5 => open);
 
   ----------------------------------------------------------------------------
   -- Make the "Hello  world" LED blink
@@ -156,21 +191,21 @@ begin  -- zedboard_rtl
       G_POWERS_OF_100NS => C_POWERS_OF_100NS,
 
       -- How many clocks cycles in the 1st 100ns pulse?
-      G_CLKS_IN_100NS => 10,            -- for a 100MHz clock
+      G_CLKS_IN_100NS => 25,            -- for a 100MHz clock
 
       -- Do you want the output pulses to be aligned with each-other?
       G_ALIGN_OUTPUTS => true)
     port map (
       -- Clock and Reset signals
-      clk => clk_100mhz,
-      rst => '0',
+      clk => clk_250mhz,
+      rst => rst_250mhz,
 
       o_pulse_at_100ns_x_10e => pulse_at_100ns_x_10e);
 
   u_hello_world : entity work.hello_world
     port map (
       -- Clock and Reset signals
-      clk => clk_100mhz,
+      clk => clk_250mhz,
 
       i_pulse  => pulse_at_100ns_x_10e(7),
       o_toggle => o_led(0));
@@ -227,7 +262,7 @@ begin  -- zedboard_rtl
 
   ----------------------------------------------------------------------------
   -- USB OTG Reset - Bank 35
-  o_otg_vbusoc <= '0';
+  o_otg_vbusoc  <= '0';
   o_otg_reset_n <= '0';
 
   ----------------------------------------------------------------------------
