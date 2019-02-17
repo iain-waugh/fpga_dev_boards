@@ -84,7 +84,7 @@ architecture vga_driver_rtl of vga_driver is
   --
   type t_video_state is (sync, b_porch, b_blank, pic, f_blank, f_porch);
   signal h_state    : t_video_state;
-  signal v_state    : t_video_state;
+  signal v_state_d1 : t_video_state;
   signal h_state_d1 : t_video_state;
 
   signal h_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
@@ -139,8 +139,14 @@ begin  -- vga_driver_rtl
             if (h_porch_count < i_h_b_porch_time) then
               h_porch_count <= h_porch_count + 1;
             else
-              h_blank_count <= (others => '0');
-              h_state       <= b_blank;
+              -- Only go to the blank state if it's non-zero time
+              if (i_h_b_blank_time /= 0) then
+                h_blank_count <= (others => '0');
+                h_state       <= b_blank;
+              else
+                h_pic_count <= (others => '0');
+                h_state     <= pic;
+              end if;
             end if;
 
           when b_blank =>
@@ -155,8 +161,14 @@ begin  -- vga_driver_rtl
             if (h_pic_count < i_h_pic_size) then
               h_pic_count <= h_pic_count + 1;
             else
-              h_blank_count <= (others => '0');
-              h_state       <= f_blank;
+              -- Only go to the blank state if it's non-zero time
+              if (i_h_f_blank_time /= 0) then
+                h_blank_count <= (others => '0');
+                h_state       <= f_blank;
+              else
+                h_porch_count <= (others => '0');
+                h_state       <= f_porch;
+              end if;
             end if;
 
           when f_blank =>
@@ -189,18 +201,18 @@ begin  -- vga_driver_rtl
     if (rising_edge(pixel_clk)) then
       if (i_frame_sync = '1') then
         v_sync_count <= (others => '0');
-        v_state      <= sync;
+        v_state_d1   <= sync;
       else
         -- Only tick the vertical state machine around when the
         -- horizontal state goes from 'front porch' to 'sync'.
         if (h_state_d1 = f_porch and h_state = sync) then
-          case v_state is
+          case v_state_d1 is
             when sync =>
               if (v_sync_count < i_v_sync_time) then
                 v_sync_count <= v_sync_count + 1;
               else
                 v_porch_count <= (others => '0');
-                v_state       <= b_porch;
+                v_state_d1    <= b_porch;
               end if;
 
             when b_porch =>
@@ -210,10 +222,10 @@ begin  -- vga_driver_rtl
                 -- Only go to the blank state if it's non-zero time
                 if (i_v_b_blank_time /= 0) then
                   v_blank_count <= (others => '0');
-                  v_state       <= b_blank;
+                  v_state_d1    <= b_blank;
                 else
                   v_pic_count <= (others => '0');
-                  v_state     <= pic;
+                  v_state_d1  <= pic;
                 end if;
               end if;
 
@@ -222,7 +234,7 @@ begin  -- vga_driver_rtl
                 v_blank_count <= v_blank_count + 1;
               else
                 v_pic_count <= (others => '0');
-                v_state     <= pic;
+                v_state_d1  <= pic;
               end if;
 
             when pic =>
@@ -232,10 +244,10 @@ begin  -- vga_driver_rtl
                 -- Only go to the blank state if it's non-zero time
                 if (i_v_f_blank_time /= 0) then
                   v_blank_count <= (others => '0');
-                  v_state       <= f_blank;
+                  v_state_d1    <= f_blank;
                 else
                   v_porch_count <= (others => '0');
-                  v_state       <= f_porch;
+                  v_state_d1    <= f_porch;
                 end if;
               end if;
 
@@ -244,7 +256,7 @@ begin  -- vga_driver_rtl
                 v_blank_count <= v_blank_count + 1;
               else
                 v_porch_count <= (others => '0');
-                v_state       <= f_porch;
+                v_state_d1    <= f_porch;
               end if;
 
             when others =>              -- 'f_porch' state
@@ -252,7 +264,7 @@ begin  -- vga_driver_rtl
                 v_porch_count <= v_porch_count + 1;
               else
                 v_sync_count <= (others => '0');
-                v_state      <= sync;
+                v_state_d1   <= sync;
               end if;
 
           end case;
