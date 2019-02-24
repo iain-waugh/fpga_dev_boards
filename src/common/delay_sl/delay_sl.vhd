@@ -9,11 +9,6 @@
 -- File Name     : delay_sl.vhd
 --
 -- Inferring shift registers, with a register on the final stage.
--- 
--- Note: This file uses 'block' keywords which lets us create signals as needed.
---       If we didn't do this and just declared a general 'sreg' signal at the
---       top, the we would get synthesis warnings when G_DELAY = 0 or 1 as the
---       unused bits were dissolved away.
 --
 -------------------------------------------------------------------------------
 
@@ -25,11 +20,8 @@ entity delay_sl is
     G_DELAY : natural := 16
     );
   port(
-    -- Clock and Reset signals
-    clk : in std_logic;
-    en  : in std_logic;
-
-    -- Data signals
+    clk    : in  std_logic;
+    en     : in  std_logic;
     i_data : in  std_logic;
     o_data : out std_logic
     );
