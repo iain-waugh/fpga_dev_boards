@@ -74,6 +74,7 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
   -- VGA signals (pixel_clk domain)
   signal pixel_clk    : std_logic := '0';
   signal i_frame_sync : std_logic := '0';
+  signal o_frame_sync : std_logic := '0';
 
   signal o_vga_hs : std_logic := '0';
   signal o_vga_vs : std_logic := '0';
@@ -86,12 +87,12 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
   signal rst : std_logic := '1';
 
   constant C_COUNT_MAX : natural := 127;
-  signal count         : natural range 0 to C_COUNT_MAX;
+  signal count         : unsigned(clog2(C_COUNT_MAX) - 1 downto 0);
 
 begin  -- architecture tb_vga_driver_rtl
 
-  i_h_sync_time <= to_unsigned(50, i_h_sync_time'length);
-  i_v_sync_time <= to_unsigned(50, i_v_sync_time'length);
+  i_h_sync_time <= to_unsigned(10, i_h_sync_time'length);
+  i_v_sync_time <= to_unsigned(10, i_v_sync_time'length);
 
   i_h_b_porch_time <= to_unsigned(40, i_h_b_porch_time'length);
   i_h_f_porch_time <= to_unsigned(40, i_h_f_porch_time'length);
@@ -155,13 +156,17 @@ begin  -- architecture tb_vga_driver_rtl
       -- VGA signals (pixel_clk domain)
       pixel_clk    => pixel_clk,
       i_frame_sync => i_frame_sync,
+      o_frame_sync => o_frame_sync,
 
       o_vga_hs => o_vga_hs,
       o_vga_vs => o_vga_vs,
 
       o_vga_red   => o_vga_red,
       o_vga_green => o_vga_green,
-      o_vga_blue  => o_vga_blue);
+      o_vga_blue  => o_vga_blue,
+
+      o_error => open
+      );
 
   -------------------------------------------------------------------------------
   -- System clock generation
@@ -193,18 +198,24 @@ begin  -- architecture tb_vga_driver_rtl
   process (clk)
   begin
     if (rising_edge(clk)) then
-      if (rst = '0') then
-        count <= 0;
+      if (rst = '1') then
+        count <= (others => '0');
       else
-        if (count < C_COUNT_MAX) then
-          count <= count + 1;
-        else
-          count <= 0;
+        if (o_pixel_ready = '1') then
+          if (count < C_COUNT_MAX) then
+            count <= count + 1;
+          else
+            count <= (others => '0');
+          end if;
         end if;
       end if;
     end if;
   end process;
 
+  i_pixel_red   <= count(i_pixel_red'high downto 0);
+  i_pixel_green <= count(i_pixel_green'high downto 0);
+  i_pixel_blue  <= count(i_pixel_blue'high downto 0);
+  i_pixel_dval  <= o_pixel_ready and not rst;
 
 end architecture tb_vga_driver_rtl;
 
