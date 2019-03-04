@@ -56,12 +56,16 @@ entity vga_driver is
     i_h_pic_size : in unsigned(clog2(G_MAX_SIZE_X) - 1 downto 0);
     i_v_pic_size : in unsigned(clog2(G_MAX_SIZE_Y) - 1 downto 0);
 
-    i_blank_colour : in std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
+    i_blank_red   : in unsigned(G_BITS_RED - 1 downto 0);
+    i_blank_green : in unsigned(G_BITS_GREEN - 1 downto 0);
+    i_blank_blue  : in unsigned(G_BITS_BLUE - 1 downto 0);
 
     -- Pixel data and handshaking signals (data_clk domain)
-    o_rdb_ready : out std_logic;  -- Only take valid data when 'ready' is high
-    i_rgb_data  : in  std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
-    i_rgb_dval  : in  std_logic;
+    o_pixel_ready : out std_logic;  -- Only take valid data when 'ready' is high
+    i_pixel_red   : in unsigned(G_BITS_RED - 1 downto 0);
+    i_pixel_green : in unsigned(G_BITS_GREEN - 1 downto 0);
+    i_pixel_blue  : in unsigned(G_BITS_BLUE - 1 downto 0);
+    i_pixel_dval  : in  std_logic;
 
     -- VGA signals (pixel_clk domain)
     pixel_clk    : in std_logic;
@@ -83,27 +87,27 @@ architecture vga_driver_rtl of vga_driver is
   --  |----|------------|---------------|-------------|
   --
   type t_video_state is (sync, b_porch, b_blank, pic, f_blank, f_porch);
-  signal h_state    : t_video_state;
-  signal v_state_d1 : t_video_state;
-  signal h_state_d1 : t_video_state;
+  signal h_state    : t_video_state := sync;
+  signal v_state_d1 : t_video_state := sync;
+  signal h_state_d1 : t_video_state := sync;
 
-  signal h_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
-  signal v_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
+  signal h_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0) := (others => '0');
+  signal v_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0) := (others => '0');
 
-  signal h_porch_count : unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-  signal v_porch_count : unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
+  signal h_porch_count : unsigned(clog2(G_MAX_PORCH) - 1 downto 0) := (others => '0');
+  signal v_porch_count : unsigned(clog2(G_MAX_PORCH) - 1 downto 0) := (others => '0');
 
-  signal h_blank_count : unsigned(clog2(G_MAX_BLANK) - 1 downto 0);
-  signal v_blank_count : unsigned(clog2(G_MAX_BLANK) - 1 downto 0);
+  signal h_blank_count : unsigned(clog2(G_MAX_BLANK) - 1 downto 0) := (others => '0');
+  signal v_blank_count : unsigned(clog2(G_MAX_BLANK) - 1 downto 0) := (others => '0');
 
-  signal h_pic_count : unsigned(clog2(G_MAX_SIZE_X) - 1 downto 0);
-  signal v_pic_count : unsigned(clog2(G_MAX_SIZE_Y) - 1 downto 0);
+  signal h_pic_count : unsigned(clog2(G_MAX_SIZE_X) - 1 downto 0) := (others => '0');
+  signal v_pic_count : unsigned(clog2(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
 
 begin  -- vga_driver_rtl
 
   ----------------------------------------------------------------------
   -- Assertion checks for correct input values
-  -- pragma synthesis_off
+  -- pragma translate_off
   assert i_h_sync_time = 0 report "Sync time cannot be zero" severity error;
   assert i_v_sync_time = 0 report "Sync time cannot be zero" severity error;
 
@@ -114,7 +118,7 @@ begin  -- vga_driver_rtl
 
   assert i_h_pic_size >= 640 report "Min width is 640" severity error;
   assert i_v_pic_size >= 480 report "Min height is 480" severity error;
-  -- pragma synthesis_on
+  -- pragma translate_on
 
   ----------------------------------------------------------------------
   -- Horizontal state machine
