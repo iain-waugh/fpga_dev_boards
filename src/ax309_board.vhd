@@ -18,10 +18,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library work;
+use work.util_pkg.all;
+
 entity ax309_board is
   port(
     -- Clock and Reset signals
-    clk_50mhz : in std_logic;
+    clk_50MHz : in std_logic;
     i_rst_n   : in std_logic;           -- Pushbutton pin - Debounce this
 
     ---------------------------------------------------------------------------
@@ -104,13 +107,39 @@ end ax309_board;
 
 architecture ax309_board_rtl of ax309_board is
 
-  signal clk_250mhz : std_logic := '0';
-  signal rst_250mhz : std_logic := '1';
+  signal clk_250MHz : std_logic := '0';
+  signal rst_250MHz : std_logic := '1';
 
   -- Internal timing pulses
   -- 8 = 100ns, 1us, 10us, 100us, 1ms, 10ms, 100ms, 1s
   constant C_POWERS_OF_100NS  : natural := 8;
   signal pulse_at_100ns_x_10e : std_logic_vector(C_POWERS_OF_100NS - 1 downto 0);
+
+
+  -- VGA Signals
+  constant C_MAX_SYNC  : natural := 200;
+  constant C_MAX_PORCH : natural := 200;
+  constant C_MAX_BLANK : natural := 200;
+
+  constant C_MAX_SIZE_X : natural := 1920;
+  constant C_MAX_SIZE_Y : natural := 1080;
+
+  constant C_BITS_RED   : natural := 5;
+  constant C_BITS_GREEN : natural := 6;
+  constant C_BITS_BLUE  : natural := 5;
+
+  signal pixel_clk        : std_logic := '0';
+  signal frame_sync_ext   : std_logic := '0';
+  signal frame_sync_local : std_logic := '0';
+
+  signal pixel_in_ready : std_logic := '0';
+  signal pixel_red      : unsigned(C_BITS_RED - 1 downto 0);
+  signal pixel_green    : unsigned(C_BITS_GREEN - 1 downto 0);
+  signal pixel_blue     : unsigned(C_BITS_BLUE - 1 downto 0);
+  signal pixel_dval     : std_logic := '0';
+
+  signal vga_error : std_logic := '0';
+
 
   -- Tristate breakout signals
   signal i_ds1302_sio   : std_logic;
@@ -138,20 +167,21 @@ begin  -- ax309_board_rtl
   -- Create system clocks and resets
   u_clk_gen : entity work.clk_gen
     generic map (
-      G_CLOCKS_USED    => 1,
+      G_CLOCKS_USED    => 2,
       G_CLKIN_PERIOD   => 20.0,         -- 20ns for a 50MHz clock
-      G_CLKFBOUT_MULT  => 10,           -- 50MHz x 10 gets a 500MHz internal PLL
-      G_CLKOUT0_DIVIDE => 2)            -- o_clk_0 = 500MHz / 2 = 250MHz
+      G_CLKFBOUT_MULT  => 10,    -- 50MHz x 10 gets a 500MHz internal PLL
+      G_CLKOUT0_DIVIDE => 2,            -- o_clk_0 = 500MHz / 2 = 250MHz
+      G_CLKOUT1_DIVIDE => 10)           -- o_clk_0 = 500MHz / 10 = 50MHz
     port map (
       -- Clock and Reset input signals
-      clk => clk_50mhz,
+      clk => clk_50MHz,
       rst => '0',  -- No reset input: Reset is determined by the PLL lock
 
       -- Clock and reset output signals
-      o_clk_0 => clk_250mhz,
-      o_rst_0 => rst_250mhz,
+      o_clk_0 => clk_250MHz,
+      o_rst_0 => rst_250MHz,
 
-      o_clk_1 => open,
+      o_clk_1 => pixel_clk,
       o_rst_1 => open,
       o_clk_2 => open,
       o_rst_2 => open,
@@ -162,12 +192,13 @@ begin  -- ax309_board_rtl
       o_clk_5 => open,
       o_rst_5 => open);
 
+  ----------------------------------------------------------------------------
   -- Connect 3x buttons to 3x LEDs
   key_1_debounce : entity work.debounce
     generic map (
       G_INVERT_OUTPUT => true)
     port map (
-      clk         => clk_250mhz,
+      clk         => clk_250MHz,
       i_button    => i_key_in_n(0),
       i_pulse     => pulse_at_100ns_x_10e(3),
       o_debounced => led(0));
@@ -176,20 +207,12 @@ begin  -- ax309_board_rtl
     generic map (
       G_INVERT_OUTPUT => true)
     port map (
-      clk         => clk_250mhz,
+      clk         => clk_250MHz,
       i_button    => i_key_in_n(1),
       i_pulse     => pulse_at_100ns_x_10e(3),
       o_debounced => led(1));
 
-  key_3_debounce : entity work.debounce
-    generic map (
-      G_INVERT_OUTPUT => true)
-    port map (
-      clk         => clk_250mhz,
-      i_button    => i_key_in_n(2),
-      i_pulse     => pulse_at_100ns_x_10e(3),
-      o_debounced => led(2));
-
+  ----------------------------------------------------------------------------
   -- Make the "Hello  world" LED blink
   u_pulse_gen : entity work.pulse_gen
     generic map (
@@ -203,21 +226,24 @@ begin  -- ax309_board_rtl
       G_ALIGN_OUTPUTS => true)
     port map (
       -- Clock and Reset signals
-      clk => clk_250mhz,
-      rst => rst_250mhz,
+      clk => clk_250MHz,
+      rst => rst_250MHz,
 
       o_pulse_at_100ns_x_10e => pulse_at_100ns_x_10e);
 
   u_hello_world : entity work.hello_world
     port map (
       -- Clock and Reset signals
-      clk => clk_250mhz,
+      clk => clk_250MHz,
 
       i_pulse  => pulse_at_100ns_x_10e(7),
-      o_toggle => led(3));
+      o_toggle => led(2));
+
+  led(3) <= vga_error;
 
   o_led        <= led;
   o_buzz_out_n <= '1';                  -- Loud when '0'!
+
 
   ---------------------------------------------------------------------------
   -- SDRAM
@@ -235,12 +261,91 @@ begin  -- ax309_board_rtl
 
   ---------------------------------------------------------------------------
   -- VGA
-  o_vga_hs <= '0';
-  o_vga_vs <= '0';
+  frame_sync_ext <= '0';
 
-  o_vga_red   <= (others => '0');
-  o_vga_green <= (others => '0');
-  o_vga_blue  <= (others => '0');
+  -- Generate a bit of dummy data for the VGA output
+  -- Note: Currently still in the pixel clk domain.
+  --       This wil be updated when we add an asynchronous FIFO
+  process (pixel_clk)
+  begin
+    if (rising_edge(pixel_clk)) then
+      if (frame_sync_local = '1') then
+        pixel_red   <= (others => '0');
+        pixel_green <= (others => '0');
+        pixel_blue  <= (others => '0');
+      else
+        if (pixel_in_ready = '1') then
+          pixel_red <= pixel_red + 1;
+
+          if (pixel_red = unsigned(all_ones(C_BITS_RED))) then
+            pixel_green <= pixel_green + 1;
+
+            if (pixel_green = unsigned(all_ones(C_BITS_GREEN))) then
+              pixel_blue <= pixel_blue + 1;
+            end if;
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+  pixel_dval <= pixel_in_ready;
+
+  -- Timings from http://www.tinyvga.com/vga-timing/800x600@72Hz
+  u_vga_driver : entity work.vga_driver
+    generic map (
+      G_MAX_SYNC  => C_MAX_SYNC,
+      G_MAX_PORCH => C_MAX_PORCH,
+      G_MAX_BLANK => C_MAX_BLANK,
+
+      G_MAX_SIZE_X => C_MAX_SIZE_X,
+      G_MAX_SIZE_Y => C_MAX_SIZE_Y,
+
+      G_BITS_RED   => C_BITS_RED,
+      G_BITS_GREEN => C_BITS_GREEN,
+      G_BITS_BLUE  => C_BITS_BLUE)
+    port map (
+      -- Timing control signals (data_clk domain)
+      i_h_sync_time => to_unsigned(120, clog2(C_MAX_SYNC)),
+      i_v_sync_time => to_unsigned(6, clog2(C_MAX_SYNC)),
+
+      i_h_b_porch_time => to_unsigned(60, clog2(C_MAX_PORCH)),
+      i_h_f_porch_time => to_unsigned(60, clog2(C_MAX_PORCH)),
+      i_v_b_porch_time => to_unsigned(30, clog2(C_MAX_PORCH)),
+      i_v_f_porch_time => to_unsigned(30, clog2(C_MAX_PORCH)),
+
+      i_h_b_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
+      i_h_f_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
+      i_v_b_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
+      i_v_f_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
+
+      i_h_pic_size => to_unsigned(800, clog2(C_MAX_SIZE_X)),
+      i_v_pic_size => to_unsigned(600, clog2(C_MAX_SIZE_Y)),
+
+      i_blank_red   => unsigned(all_zeros(C_BITS_RED)),
+      i_blank_green => unsigned(all_zeros(C_BITS_GREEN)),
+      i_blank_blue  => unsigned(all_zeros(C_BITS_BLUE)),
+
+      -- Pixel data and handshaking signals (data_clk domain)
+      data_clk      => pixel_clk,       -- Using 'pixel_clk' for now
+      o_pixel_ready => pixel_in_ready,
+      i_pixel_red   => pixel_red,
+      i_pixel_green => pixel_green,
+      i_pixel_blue  => pixel_blue,
+      i_pixel_dval  => pixel_dval,
+
+      -- VGA signals (pixel_clk domain)
+      pixel_clk    => pixel_clk,
+      i_frame_sync => frame_sync_ext,
+      o_frame_sync => frame_sync_local,
+
+      o_vga_hs => o_vga_hs,
+      o_vga_vs => o_vga_vs,
+
+      o_vga_red   => o_vga_red,
+      o_vga_green => o_vga_green,
+      o_vga_blue  => o_vga_blue,
+
+      o_error => vga_error);
 
   ---------------------------------------------------------------------------
   -- SD Card Connector

@@ -82,7 +82,6 @@ architecture fifo_sync_rtl of fifo_sync is
 
   -- Wrapped versions of signals
   signal rd_zero_extend : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
-  signal rd_count_wrap  : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
   signal wr_count_wrap  : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
 
   signal rd_wrapped : std_logic := '0';
@@ -151,7 +150,6 @@ begin  -- fifo_sync_rtl
     end if;
   end process wr_wrap_flag;
   rd_zero_extend <= '0' & rd_count;
-  rd_count_wrap  <= rd_wrapped & rd_count;
   wr_count_wrap  <= wr_wrapped & wr_count;
 
 ----------------------------------------------------------------------

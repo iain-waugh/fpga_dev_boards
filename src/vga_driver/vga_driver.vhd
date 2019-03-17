@@ -36,9 +36,6 @@ entity vga_driver is
     G_BITS_BLUE  : natural := 5
     );
   port(
-    -- Clock and Reset signals
-    data_clk : in std_logic;
-
     -- Timing control signals (data_clk domain)
     i_h_sync_time : in unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
     i_v_sync_time : in unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
@@ -61,6 +58,7 @@ entity vga_driver is
     i_blank_blue  : in unsigned(G_BITS_BLUE - 1 downto 0);
 
     -- Pixel data and handshaking signals (data_clk domain)
+    data_clk      : in  std_logic;  -- Use pixel clock for the time being (data_clk=pixel_clk)
     o_pixel_ready : out std_logic;  -- Can only take data when 'ready' is high
     i_pixel_red   : in  unsigned(G_BITS_RED - 1 downto 0);
     i_pixel_green : in  unsigned(G_BITS_GREEN - 1 downto 0);

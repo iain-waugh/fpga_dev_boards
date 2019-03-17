@@ -5,9 +5,13 @@ vhdl work "../../src/common/clk_gen/clk_gen_s6.vhd"
 vhdl work "../../src/common/delay_sl/delay_sl.vhd"
 vhdl work "../../src/common/pulse_gen/pulse_gen.vhd"
 vhdl work "../../src/common/debounce/debounce.vhd"
+vhdl work "../../src/common/fifo/fifo_sync.vhd"
 
 # Hello World
 vhdl work "../../src/hello_world/hello_world.vhd"
+
+# VGA Output
+vhdl work "../../src/vga_driver/vga_driver.vhd"
 
 # Main file
 vhdl work "../../src/ax309_board.vhd"
