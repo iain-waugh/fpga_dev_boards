@@ -111,7 +111,10 @@ architecture vga_driver_rtl of vga_driver is
   signal pixel_out_data   : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
   signal pixel_fifo_full  : std_logic;
   signal pixel_fifo_empty : std_logic;
-  signal pic_valid        : std_logic;
+  signal pic_valid_d1     : std_logic;
+  signal pic_valid_d2     : std_logic;
+  signal blank_valid_d1   : std_logic;
+  signal blank_valid_d2   : std_logic;
 
   signal wr_error : std_logic;
   signal rd_error : std_logic;
@@ -327,8 +330,12 @@ begin  -- vga_driver_rtl
                    std_logic_vector(i_pixel_green) &
                    std_logic_vector(i_pixel_blue);
 
-  pic_valid <= '1' when h_state_d1 = pic and v_state_d1 = pic
-               else '0';
+  pic_valid_d1 <= '1' when h_state_d1 = pic and v_state_d1 = pic
+                  else '0';
+
+  blank_valid_d1 <= '1' when h_state_d1 = b_blank or h_state_d1 = f_blank or
+                    v_state_d1 = b_blank or v_state_d1 = f_blank
+                    else '0';
 
   pixel_fifo : entity work.fifo_sync
     generic map (
@@ -355,17 +362,43 @@ begin  -- vga_driver_rtl
 
       -- Read ports
       o_empty    => pixel_fifo_empty,
-      i_rd_en    => pic_valid,
+      i_rd_en    => pic_valid_d1,
       o_data     => pixel_out_data,
       o_rd_error => rd_error);
 
-  o_frame_sync  <= frame_start;
-  o_pixel_ready <= not pixel_fifo_full;
+  ----------------------------------------------------------------------
+  -- Register the outputs and hold the RGB output low when we're not
+  -- within the display area
+  process (pixel_clk)
+  begin
+    if (rising_edge(pixel_clk)) then
+      pic_valid_d2   <= pic_valid_d1;
+      blank_valid_d2 <= blank_valid_d1;
+    end if;
+  end process;
 
-  o_vga_red   <= unsigned(pixel_out_data(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_GREEN + G_BITS_BLUE));
-  o_vga_green <= unsigned(pixel_out_data(G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_BLUE));
-  o_vga_blue  <= unsigned(pixel_out_data(G_BITS_BLUE - 1 downto 0));
+  process (pixel_clk)
+  begin
+    if (rising_edge(pixel_clk)) then
+      o_frame_sync  <= frame_start;
+      o_pixel_ready <= not pixel_fifo_full;
 
-  o_error <= wr_error or rd_error;
+      if (pic_valid_d2 = '1') then
+        o_vga_red   <= unsigned(pixel_out_data(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_GREEN + G_BITS_BLUE));
+        o_vga_green <= unsigned(pixel_out_data(G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_BLUE));
+        o_vga_blue  <= unsigned(pixel_out_data(G_BITS_BLUE - 1 downto 0));
+      elsif (blank_valid_d2 = '1') then
+        o_vga_red   <= i_blank_red;
+        o_vga_green <= i_blank_green;
+        o_vga_blue  <= i_blank_blue;
+      else
+        o_vga_red   <= (others => '0');
+        o_vga_green <= (others => '0');
+        o_vga_blue  <= (others => '0');
+      end if;
+
+      o_error <= wr_error or rd_error;
+    end if;
+  end process;
 
 end vga_driver_rtl;
