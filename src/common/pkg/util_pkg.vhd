@@ -29,13 +29,16 @@ package util_pkg is
   function swap_byte(slv : std_logic_vector) return std_logic_vector;
 
   -- Misc functions
-  function ones(x  : natural)  return std_logic_vector;
+  function ones(x  : natural) return std_logic_vector;
   function ones(x  : unsigned) return unsigned;
-  function zeros(x : natural)  return std_logic_vector;
+  function zeros(x : natural) return std_logic_vector;
   function zeros(x : unsigned) return unsigned;
 
   -- Type conversion functions
-  function to_integer(sl : std_logic) return integer;
+  function to_01(slv : std_logic_vector) return std_logic_vector;
+  function to_01(sl  : std_logic) return std_logic;
+
+  function to_integer(sl  : std_logic) return integer;
   function to_std_logic(x : boolean) return std_logic;
 
   -- Logic functions
@@ -119,6 +122,34 @@ package body util_pkg is
   -------------------------------------------------------------------------
   -- Type Conversion functions
   -------------------------------------------------------------------------
+  function to_01(slv : std_logic_vector) return std_logic_vector is
+    variable v_result      : std_logic_vector(slv'range);
+    variable v_bad_element : boolean := false;
+  begin
+    for i in v_result'range loop
+      case slv(i) is
+        when '0' | 'L' => v_result(i)   := '0';
+        when '1' | 'H' => v_result(i)   := '1';
+        when others    => v_bad_element := true;
+      end case;
+    end loop;
+    if v_bad_element then
+      for i in v_result'range loop
+        v_result(i) := '0';             -- standard fixup
+      end loop;
+    end if;
+    return v_result;
+  end function to_01;
+
+  function to_01(sl : std_logic) return std_logic is
+  begin
+    case sl is
+      when '0' | 'L' => return '0';
+      when '1' | 'H' => return '1';
+      when others    => return '0';
+    end case;
+  end function to_01;
+
   function to_integer(sl : std_logic) return integer is
   begin
     if (sl = '0') then

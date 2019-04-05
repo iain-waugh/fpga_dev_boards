@@ -14,6 +14,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity tb_ax309_board is
 end entity tb_ax309_board;
@@ -48,12 +49,12 @@ architecture tb_ax309_board_rtl of tb_ax309_board is
 
   ---------------------------------------------------------------------------
   -- VGA
-  signal o_vga_red   : std_logic_vector(4 downto 0);
-  signal o_vga_green : std_logic_vector(5 downto 0);
-  signal o_vga_blue  : std_logic_vector(4 downto 0);
-
   signal o_vga_hs : std_logic;
   signal o_vga_vs : std_logic;
+
+  signal o_vga_red   : unsigned(4 downto 0);
+  signal o_vga_green : unsigned(5 downto 0);
+  signal o_vga_blue  : unsigned(4 downto 0);
 
   ---------------------------------------------------------------------------
   -- SD Card Connector
