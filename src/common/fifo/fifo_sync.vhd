@@ -138,11 +138,11 @@ begin  -- fifo_sync_rtl
         rd_wrapped <= '0';
         wr_wrapped <= '0';
       else
-        if (i_wr_en = '1' and wr_count = all_ones(wr_count)) then
+        if (i_wr_en = '1' and wr_count = ones(wr_count)) then
           -- Write wrapped; it's still ahead of the read pointer
           rd_wrapped <= '0';
           wr_wrapped <= '1';
-        elsif (i_rd_en = '1' and rd_count = all_ones(rd_count)) then
+        elsif (i_rd_en = '1' and rd_count = ones(rd_count)) then
           -- Read wrapped, so read is a lower number than the write pointer
           rd_wrapped <= '1';
           wr_wrapped <= '0';
