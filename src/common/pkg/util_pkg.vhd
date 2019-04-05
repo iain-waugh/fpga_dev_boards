@@ -36,6 +36,7 @@ package util_pkg is
 
   -- Type conversion functions
   function to_integer(sl : std_logic) return integer;
+  function to_std_logic(x : boolean) return std_logic;
 
   -- Logic functions
   function and_all(slv  : std_logic_vector) return std_logic;
@@ -127,6 +128,14 @@ package body util_pkg is
     end if;
   end to_integer;
 
+  function to_std_logic(x : boolean) return std_logic is
+  begin
+    if (x = false) then
+      return '0';
+    else
+      return '1';
+    end if;
+  end to_std_logic;
 
   -------------------------------------------------------------------------
   -- Logic functions
