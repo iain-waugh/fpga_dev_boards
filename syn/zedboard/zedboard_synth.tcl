@@ -34,9 +34,14 @@ read_vhdl "../../src/common/sync_sl/sync_sl.vhd"
 read_vhdl "../../src/common/delay_sl/delay_sl.vhd"
 read_vhdl "../../src/common/clk_gen/clk_gen_s6.vhd"
 read_vhdl "../../src/common/pulse_gen/pulse_gen.vhd"
+read_vhdl "../../src/common/debounce/debounce.vhd"
+read_vhdl "../../src/common/fifo/fifo_sync.vhd"
 
 # Hello World
 read_vhdl "../../src/hello_world/hello_world.vhd"
+
+# VGA Output
+read_vhdl "../../src/vga_driver/vga_driver.vhd"
 
 # Main file
 read_vhdl "../../src/zedboard.vhd"
