@@ -45,7 +45,7 @@ synth: ${PROJECT}.ngc ${PROJECT}.prj
 ${PROJECT}.ngc : ../../src/${PROJECT}.vhd
 	@echo
 	@echo
-	@echo '## --- Synthesis --- ##'
+	@echo '## ---  Running Synthesis  --- ##'
 	@echo
 	# xst [-ifn in_file_name] [-ofn out_file_name] [-intstyle] [-filter msgfilter_file_name]
 	# UG687 v14.5, page 14
@@ -66,7 +66,7 @@ ${PROJECT}.ngd : ${PROJECT}.ngc ${DEVICE}.ucf
 # Commands to build the '.ngd'
 	@echo
 	@echo
-	@echo '## --- NGD Build --- ##'
+	@echo '## ---  Running NGD Build  --- ##'
 	@echo
 	# ngdbuild [options] design_name [ngd_file[.ngd]]
 	# UG628 v14.7, page 74
@@ -86,7 +86,7 @@ ${PROJECT}_map.ncd : ${PROJECT}.ngd
 # Commands to build the '.map'
 	@echo
 	@echo
-	@echo '## --- Device Mapping --- ##'
+	@echo '## ---  Running Device Mapping  --- ##'
 	@echo
 	# map [options] infile[.ngd] [pcf_file.pcf]
 	# UG628 v14.7, page 84
@@ -107,7 +107,7 @@ ${PROJECT}.ncd : ${PROJECT}_map.ncd
 # Commands to build the '.par'
 	@echo
 	@echo
-	@echo '## --- Place and Route --- ##'
+	@echo '## ---  Running Place and Route  --- ##'
 	@echo
 	# par [options] infile[.ncd] outfile [pcf_file[.pcf]]
 	# UG628 v14.7, page 116
@@ -115,7 +115,7 @@ ${PROJECT}.ncd : ${PROJECT}_map.ncd
 
 	@echo
 	@echo
-	@echo '## --- Analyse Timing --- ##'
+	@echo '## ---  Running Timing Analysis --- ##'
 	@echo
 	# trce [options] design[.ncd] [constraint[.pcf]]
 	# UG628 v14.7, page 180
@@ -137,7 +137,7 @@ ${PROJECT}.bit : ${PROJECT}.ncd
 # Commands to build the '.bit'
 	@echo
 	@echo
-	@echo '## --- BitGen --- ##'
+	@echo '## ---  Running BitGen  --- ##'
 	@echo
 	# bitgen [options] infile[.ncd] [outfile] [pcf_file.pcf]
 	# UG628 v14.7, page 223

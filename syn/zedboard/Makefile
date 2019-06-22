@@ -42,7 +42,7 @@ all: synth route
 
 clean:
 	rm -fR .Xil ${OUT_DIR}
-	rm -f vivado.log vivado.jou vivado*.backup.log vivado*.backup.jou
+	rm -f vivado.log vivado.jou vivado_*.backup.log vivado_*.backup.jou
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -54,8 +54,7 @@ ${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd
 # Invoke the synthesis script
 	@echo
 	@echo
-	@echo '## --- Load Design, then run --- ##'
-	@echo '## ---      Synthesis        --- ##'
+	@echo '## ---  Running Synthesis  --- ##'
 	@echo
 	mkdir -p ${OUT_DIR}
 	vivado -mode batch -source ${SYNTH_NAME}.tcl \
@@ -71,8 +70,7 @@ ${OUT_DIR}/${ROUTE_NAME}.dcp : ${OUT_DIR}/${SYNTH_NAME}.dcp
 # Invoke the opt, place and route script
 	@echo
 	@echo
-	@echo '## --- Load Synth ".dcp", then run --- ##'
-	@echo '## ---       Place and Route       --- ##'
+	@echo '## ---  Running Place and Route  --- ##'
 	@echo
 	vivado -mode batch -source ${ROUTE_NAME}.tcl \
 		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${ROUTE_NAME} ${PROJECT}
