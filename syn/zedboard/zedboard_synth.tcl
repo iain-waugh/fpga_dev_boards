@@ -53,6 +53,7 @@ read_vhdl "../../src/zedboard.vhd"
 #   Options used are:
 #     (none)
 read_xdc ${DEVICE}.xdc
+read_xdc ${DEVICE}_timing.xdc
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
