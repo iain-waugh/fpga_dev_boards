@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 --
--- Copyright (c) 2019 CadHut
+-- Copyright (c) 2019 Iain Waugh
 -- All rights reserved.
 --
 -------------------------------------------------------------------------------
@@ -35,6 +35,7 @@ entity fifo_sync is
     G_DATA_WIDTH : integer := 36;       -- Input / Output data width
     G_LOG2_DEPTH : integer := 9;        -- log2( Memory Depth )
 
+    -- Leave this as "true" unless you have to have low latency
     G_REGISTER_OUT : boolean := true;
 
     -- RAM styles:
@@ -81,8 +82,8 @@ architecture fifo_sync_rtl of fifo_sync is
   signal rd_count : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
 
   -- Wrapped versions of signals
-  signal rd_zero_extend : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
-  signal wr_count_wrap  : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
+  signal rd_count_zero_extend : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
+  signal wr_count_wrap        : unsigned(G_LOG2_DEPTH downto 0) := (others => '0');
 
   signal rd_wrapped : std_logic := '0';
   signal wr_wrapped : std_logic := '0';
@@ -126,10 +127,10 @@ begin  -- fifo_sync_rtl
     end if;
   end process;
 
-----------------------------------------------------------------------
--- We need to know if the write pointer is ahead of the read pointer,
--- even if it has wrapped around back to zero
--- Assumption: Write and read will NEVER reach all ones at the same time
+  ----------------------------------------------------------------------
+  -- We need to know if the write pointer is ahead of the read pointer,
+  -- even if it has wrapped around back to zero
+  -- Assumption: Write and read will NEVER reach all ones at the same time
   wr_wrap_flag : process (clk)
   begin
     if (rising_edge(clk)) then
@@ -149,13 +150,18 @@ begin  -- fifo_sync_rtl
       end if;
     end if;
   end process wr_wrap_flag;
-  rd_zero_extend <= '0' & rd_count;
-  wr_count_wrap  <= wr_wrapped & wr_count;
+  rd_count_zero_extend <= '0' & rd_count;
+  wr_count_wrap        <= wr_wrapped & wr_count;
 
-----------------------------------------------------------------------
--- Generate signal and error flags
--- If rd_count = wr_count, the FIFO is empty
--- If rd_count = wr_count + 1, the FIFO is full
+  -- Raise an error if my design assumption is wrong
+  assert (rd_count = ones(rd_count) and wr_count = ones(wr_count))
+    report "Error: The design assumes that 'rd_count' and 'wr_count' are never all 1's at the same time"
+    severity error;
+
+  ----------------------------------------------------------------------
+  -- Generate signal and error flags
+  -- If rd_count = wr_count, the FIFO is empty
+  -- If rd_count = wr_count + 1, the FIFO is full
   set_levels : process (clk)
   begin
     if (rising_edge(clk)) then
@@ -168,23 +174,23 @@ begin  -- fifo_sync_rtl
         -- The flags can only change if read/write are different
         if (i_rd_en /= i_wr_en) then
           -- Default values for signals
-          full     <= '0';
-          empty    <= '0';
+          full  <= '0';
+          empty <= '0';
 
           if (i_rd_en = '1') then
-            if (rd_zero_extend + 1 = wr_count_wrap) then
+            if (rd_count_zero_extend + 1 = wr_count_wrap) then
               empty <= '1';
             end if;
-            if (rd_zero_extend = wr_count_wrap) then
+            if (rd_count_zero_extend = wr_count_wrap) then
               empty    <= '1';
               rd_error <= '1';
             end if;
           else
             -- i_rd_en /= i_wr_en, so i_wr_en must be '1'
-            if (rd_zero_extend = wr_count + 2) then
+            if (rd_count_zero_extend = wr_count + 2) then
               full <= '1';
             end if;
-            if (rd_zero_extend = wr_count + 1) then
+            if (rd_count_zero_extend = wr_count + 1) then
               full     <= '1';
               wr_error <= '1';
             end if;
@@ -195,9 +201,9 @@ begin  -- fifo_sync_rtl
     end if;
   end process set_levels;
 
-----------------------------------------------------------------------
--- Either register the outputs or pass them straight through.
--- Logic runs faster when registered, but there's a 1-cycle penalty.
+  ----------------------------------------------------------------------
+  -- Either register the outputs or pass them straight through.
+  -- Logic runs faster when registered, but there's a 1-cycle penalty.
   out_not_registered : if G_REGISTER_OUT = false generate
     o_data <= data;
   end generate out_not_registered;
