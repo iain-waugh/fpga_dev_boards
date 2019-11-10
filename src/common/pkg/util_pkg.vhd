@@ -35,6 +35,8 @@ package util_pkg is
   function all_zeros(x : unsigned) return unsigned;
 
   -- Type conversion functions
+  -- The "to_01" function is used to get rid of simulation warnings with
+  -- the output from uninitialised RAMs.
   function to_01(slv : std_logic_vector) return std_logic_vector;
   function to_01(sl  : std_logic) return std_logic;
 
@@ -123,30 +125,19 @@ package body util_pkg is
   -- Type Conversion functions
   -------------------------------------------------------------------------
   function to_01(slv : std_logic_vector) return std_logic_vector is
-    variable v_result      : std_logic_vector(slv'range);
-    variable v_bad_element : boolean := false;
+    variable v_result : std_logic_vector(slv'range);
   begin
     for i in v_result'range loop
-      case slv(i) is
-        when '0' | 'L' => v_result(i)   := '0';
-        when '1' | 'H' => v_result(i)   := '1';
-        when others    => v_bad_element := true;
-      end case;
+      v_result(i) := to_01(slv(i));
     end loop;
-    if v_bad_element then
-      for i in v_result'range loop
-        v_result(i) := '0';             -- standard fixup
-      end loop;
-    end if;
     return v_result;
   end function to_01;
 
   function to_01(sl : std_logic) return std_logic is
   begin
-    case sl is
-      when '0' | 'L' => return '0';
-      when '1' | 'H' => return '1';
-      when others    => return '0';
+    case to_x01(sl) is
+      when '1'    => return '1';
+      when others => return '0';
     end case;
   end function to_01;
 
