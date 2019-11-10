@@ -138,11 +138,11 @@ begin  -- fifo_sync_rtl
         rd_wrapped <= '0';
         wr_wrapped <= '0';
       else
-        if (i_wr_en = '1' and wr_count = ones(wr_count)) then
+        if (i_wr_en = '1' and wr_count = all_ones(wr_count)) then
           -- Write wrapped; it's still ahead of the read pointer
           rd_wrapped <= '0';
           wr_wrapped <= '1';
-        elsif (i_rd_en = '1' and rd_count = ones(rd_count)) then
+        elsif (i_rd_en = '1' and rd_count = all_ones(rd_count)) then
           -- Read wrapped, so read is a lower number than the write pointer
           rd_wrapped <= '1';
           wr_wrapped <= '0';
@@ -154,7 +154,7 @@ begin  -- fifo_sync_rtl
   wr_count_wrap        <= wr_wrapped & wr_count;
 
   -- Raise an error if my design assumption is wrong
-  assert (rd_count = ones(rd_count) and wr_count = ones(wr_count))
+  assert (rd_count = all_ones(rd_count) and wr_count = all_ones(wr_count))
     report "Error: The design assumes that 'rd_count' and 'wr_count' are never all 1's at the same time"
     severity error;
 

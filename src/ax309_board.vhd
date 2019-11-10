@@ -277,10 +277,10 @@ begin  -- ax309_board_rtl
         if (pixel_in_ready = '1') then
           pixel_red <= pixel_red + 1;
 
-          if (pixel_red = unsigned(ones(C_BITS_RED))) then
+          if (pixel_red = unsigned(all_ones(C_BITS_RED))) then
             pixel_green <= pixel_green + 1;
 
-            if (pixel_green = unsigned(ones(C_BITS_GREEN))) then
+            if (pixel_green = unsigned(all_ones(C_BITS_GREEN))) then
               pixel_blue <= pixel_blue + 1;
             end if;
           end if;
@@ -321,9 +321,9 @@ begin  -- ax309_board_rtl
       i_h_pic_size => to_unsigned(800, clog2(C_MAX_SIZE_X)),
       i_v_pic_size => to_unsigned(600, clog2(C_MAX_SIZE_Y)),
 
-      i_blank_red   => unsigned(zeros(C_BITS_RED)),
-      i_blank_green => unsigned(zeros(C_BITS_GREEN)),
-      i_blank_blue  => unsigned(zeros(C_BITS_BLUE)),
+      i_blank_red   => unsigned(all_zeros(C_BITS_RED)),
+      i_blank_green => unsigned(all_zeros(C_BITS_GREEN)),
+      i_blank_blue  => unsigned(all_zeros(C_BITS_BLUE)),
 
       -- Pixel data and handshaking signals (data_clk domain)
       data_clk      => pixel_clk,       -- Using 'pixel_clk' for now

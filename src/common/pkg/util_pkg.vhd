@@ -29,10 +29,10 @@ package util_pkg is
   function swap_byte(slv : std_logic_vector) return std_logic_vector;
 
   -- Misc functions
-  function ones(x  : natural) return std_logic_vector;
-  function ones(x  : unsigned) return unsigned;
-  function zeros(x : natural) return std_logic_vector;
-  function zeros(x : unsigned) return unsigned;
+  function all_ones(x  : natural) return std_logic_vector;
+  function all_ones(x  : unsigned) return unsigned;
+  function all_zeros(x : natural) return std_logic_vector;
+  function all_zeros(x : unsigned) return unsigned;
 
   -- Type conversion functions
   function to_01(slv : std_logic_vector) return std_logic_vector;
@@ -42,12 +42,12 @@ package util_pkg is
   function to_std_logic(x : boolean) return std_logic;
 
   -- Logic functions
-  function and_all(slv  : std_logic_vector) return std_logic;
-  function nand_all(slv : std_logic_vector) return std_logic;
-  function or_all(slv   : std_logic_vector) return std_logic;
-  function nor_all(slv  : std_logic_vector) return std_logic;
-  function xor_all(slv  : std_logic_vector) return std_logic;
-  function xnor_all(slv : std_logic_vector) return std_logic;
+  function and_reduce(slv  : std_logic_vector) return std_logic;
+  function nand_reduce(slv : std_logic_vector) return std_logic;
+  function or_reduce(slv   : std_logic_vector) return std_logic;
+  function nor_reduce(slv  : std_logic_vector) return std_logic;
+  function xor_reduce(slv  : std_logic_vector) return std_logic;
+  function xnor_reduce(slv : std_logic_vector) return std_logic;
 
 end util_pkg;
 
@@ -97,27 +97,27 @@ package body util_pkg is
   -------------------------------------------------------------------------
   -- Misc functions
   -------------------------------------------------------------------------
-  function ones(x : natural) return std_logic_vector is
+  function all_ones(x : natural) return std_logic_vector is
     variable slv : std_logic_vector(x - 1 downto 0) := (others => '1');
   begin
     return slv;
-  end ones;
-  function ones(x : unsigned) return unsigned is
+  end all_ones;
+  function all_ones(x : unsigned) return unsigned is
     variable u : unsigned(x'range) := (others => '1');
   begin
     return u;
-  end ones;
+  end all_ones;
 
-  function zeros(x : natural) return std_logic_vector is
+  function all_zeros(x : natural) return std_logic_vector is
     variable slv : std_logic_vector(x - 1 downto 0) := (others => '0');
   begin
     return slv;
-  end zeros;
-  function zeros(x : unsigned) return unsigned is
+  end all_zeros;
+  function all_zeros(x : unsigned) return unsigned is
     variable u : unsigned(x'range) := (others => '0');
   begin
     return u;
-  end zeros;
+  end all_zeros;
 
   -------------------------------------------------------------------------
   -- Type Conversion functions
@@ -172,7 +172,7 @@ package body util_pkg is
   -- Logic functions
   -------------------------------------------------------------------------
 
-  function and_all(slv : std_logic_vector) return std_logic is
+  function and_reduce(slv : std_logic_vector) return std_logic is
     variable r : std_logic;
   begin
     r := '1';
@@ -180,14 +180,14 @@ package body util_pkg is
       r := r and slv(i);
     end loop;
     return r;
-  end and_all;
+  end and_reduce;
 
-  function nand_all(slv : std_logic_vector) return std_logic is
+  function nand_reduce(slv : std_logic_vector) return std_logic is
   begin
-    return not and_all(slv);
-  end nand_all;
+    return not and_reduce(slv);
+  end nand_reduce;
 
-  function or_all(slv : std_logic_vector) return std_logic is
+  function or_reduce(slv : std_logic_vector) return std_logic is
     variable r : std_logic;
   begin
     r := '0';
@@ -195,14 +195,14 @@ package body util_pkg is
       r := r or slv(i);
     end loop;
     return r;
-  end or_all;
+  end or_reduce;
 
-  function nor_all(slv : std_logic_vector) return std_logic is
+  function nor_reduce(slv : std_logic_vector) return std_logic is
   begin
-    return not or_all(slv);
-  end nor_all;
+    return not or_reduce(slv);
+  end nor_reduce;
 
-  function xor_all(slv : std_logic_vector) return std_logic is
+  function xor_reduce(slv : std_logic_vector) return std_logic is
     variable r : std_logic;
   begin
     r := '0';
@@ -210,11 +210,11 @@ package body util_pkg is
       r := r xor slv(i);
     end loop;
     return r;
-  end xor_all;
+  end xor_reduce;
 
-  function xnor_all(slv : std_logic_vector) return std_logic is
+  function xnor_reduce(slv : std_logic_vector) return std_logic is
   begin
-    return not xor_all(slv);
-  end xnor_all;
+    return not xor_reduce(slv);
+  end xnor_reduce;
 
 end util_pkg;

@@ -122,9 +122,9 @@ begin  -- architecture tb_vga_driver_rtl
       i_h_pic_size => to_unsigned(800, clog2(C_MAX_SIZE_X)),
       i_v_pic_size => to_unsigned(600, clog2(C_MAX_SIZE_Y)),
 
-      i_blank_red   => unsigned(zeros(C_BITS_RED)),
-      i_blank_green => unsigned(zeros(C_BITS_GREEN)),
-      i_blank_blue  => unsigned(zeros(C_BITS_BLUE)),
+      i_blank_red   => unsigned(all_zeros(C_BITS_RED)),
+      i_blank_green => unsigned(all_zeros(C_BITS_GREEN)),
+      i_blank_blue  => unsigned(all_zeros(C_BITS_BLUE)),
 
       -- Pixel data and handshaking signals (data_clk domain)
       data_clk      => pixel_clk,       -- Using 'pixel_clk' for now
