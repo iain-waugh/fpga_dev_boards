@@ -109,6 +109,7 @@ architecture vga_driver_rtl of vga_driver is
   signal pixel_fifo_reset : std_logic;
   signal pixel_in_data    : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
   signal pixel_out_data   : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
+  signal pixel_dval       : std_logic;
   signal pixel_fifo_full  : std_logic;
   signal pixel_fifo_empty : std_logic;
   signal pic_valid_d1     : std_logic;
@@ -345,7 +346,7 @@ begin  -- vga_driver_rtl
       G_REGISTER_OUT => true,
 
       -- RAM styles:
-      -- Xilinx: "block" or "distributed"
+      -- Xilinx: "block", "distributed", "registers" or "uram"
       -- Altera: "logic", "M512", "M4K", "M9K", "M20K", "M144K", "MLAB", or "M-RAM"
       -- Lattice: "registers", "distributed" or "block_ram"
       G_RAM_STYLE => "distributed")
@@ -364,6 +365,7 @@ begin  -- vga_driver_rtl
       o_empty    => pixel_fifo_empty,
       i_rd_en    => pic_valid_d1,
       o_data     => pixel_out_data,
+      o_dval     => pixel_dval,
       o_rd_error => rd_error);
 
   ----------------------------------------------------------------------

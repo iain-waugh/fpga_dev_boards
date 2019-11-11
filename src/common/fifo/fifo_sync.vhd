@@ -39,7 +39,7 @@ entity fifo_sync is
     G_REGISTER_OUT : boolean := true;
 
     -- RAM styles:
-    -- Xilinx: "block" or "distributed"
+    -- Xilinx: "block", "distributed", "registers" or "uram"
     -- Altera: "logic", "M512", "M4K", "M9K", "M20K", "M144K", "MLAB", or "M-RAM"
     -- Lattice: "registers", "distributed" or "block_ram"
     G_RAM_STYLE : string := "block"
@@ -59,6 +59,7 @@ entity fifo_sync is
     o_empty    : out std_logic;
     i_rd_en    : in  std_logic;
     o_data     : out std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+    o_dval     : out std_logic;
     o_rd_error : out std_logic
     );
 end fifo_sync;
@@ -76,7 +77,8 @@ architecture fifo_sync_rtl of fifo_sync is
   attribute syn_ramstyle        : string;
   attribute syn_ramstyle of ram : signal is G_RAM_STYLE;
 
-  signal data : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
+  signal data_raw : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
+  signal data     : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
 
   signal wr_count : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
   signal rd_count : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
@@ -93,20 +95,41 @@ architecture fifo_sync_rtl of fifo_sync is
   signal rd_error : std_logic := '0';
   signal wr_error : std_logic := '0';
 
+  signal rd_vld : std_logic := '0';
+  signal dval   : std_logic := '0';
+
 begin  -- fifo_sync_rtl
 
   ----------------------------------------------------------------------
   -- Infer the RAM; handle reads and writes
-  u_ram : process (clk)
+  u_ram_wr : process (clk)
   begin
     if (rising_edge(clk)) then
       if (i_wr_en = '1') then
         ram(to_integer(wr_count)) <= i_data;
       end if;
     end if;
-  end process u_ram;
+  end process u_ram_wr;
   -- Use a "to_01" function to get rid of 'X'es when simulations start
-  data <= to_01(ram(to_integer(rd_count)));
+  u_ram_rd : process (clk)
+  begin
+    if (rising_edge(clk)) then
+      data_raw <= ram(to_integer(rd_count));
+    end if;
+  end process u_ram_rd;
+
+  -- Create a read-valid signal
+  process (clk)
+  begin
+    if (rising_edge(clk)) then
+      if (rst = '1') then
+        rd_vld <= '0';
+      else
+        rd_vld <= i_rd_en;
+      end if;
+    end if;
+  end process;
+  data <= to_01(data_raw);
 
   ----------------------------------------------------------------------
   -- Handle the counters
@@ -154,9 +177,11 @@ begin  -- fifo_sync_rtl
   wr_count_wrap        <= wr_wrapped & wr_count;
 
   -- Raise an error if my design assumption is wrong
-  assert (rd_count = all_ones(rd_count) and wr_count = all_ones(wr_count))
+  -- pragma synthesis_off
+  assert (rd_count = all_ones(rd_count) and rd_count = wr_count)
     report "Error: The design assumes that 'rd_count' and 'wr_count' are never all 1's at the same time"
     severity error;
+  -- pragma synthesis_on
 
   ----------------------------------------------------------------------
   -- Generate signal and error flags
@@ -206,6 +231,7 @@ begin  -- fifo_sync_rtl
   -- Logic runs faster when registered, but there's a 1-cycle penalty.
   out_not_registered : if G_REGISTER_OUT = false generate
     o_data <= data;
+    o_dval <= rd_vld;
   end generate out_not_registered;
 
   out_registered : if G_REGISTER_OUT = true generate
@@ -213,6 +239,7 @@ begin  -- fifo_sync_rtl
     begin
       if(rising_edge(clk)) then
         o_data <= data;
+        o_dval <= rd_vld;
       end if;
     end process u_reg_out;
   end generate out_registered;

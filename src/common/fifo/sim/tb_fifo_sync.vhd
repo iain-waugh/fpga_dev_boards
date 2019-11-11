@@ -31,7 +31,7 @@ architecture tb_fifo_sync_rtl of tb_fifo_sync is
   constant G_REGISTER_OUT : boolean := false;
 
   -- RAM styles:
-  -- Xilinx: "block" or "distributed"
+  -- Xilinx: "block", "distributed", "registers" or "uram"
   -- Altera: "logic", "M512", "M4K", "M9K", "M20K", "M144K", "MLAB", or "M-RAM"
   -- Lattice: "registers", "distributed" or "block_ram"
   constant G_RAM_STYLE : string := "block";
@@ -51,6 +51,7 @@ architecture tb_fifo_sync_rtl of tb_fifo_sync is
   signal o_empty    : std_logic;
   signal i_rd_en    : std_logic := '0';
   signal o_data     : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+  signal o_dval     : std_logic;
   signal o_rd_error : std_logic;
 
   signal fifo_rst : std_logic := '0';
@@ -94,6 +95,7 @@ begin  -- architecture tb_fifo_sync_rtl
       o_empty    => o_empty,
       i_rd_en    => i_rd_en,
       o_data     => o_data,
+      o_dval     => o_dval,
       o_rd_error => o_rd_error);
 
   -------------------------------------------------------------------------------
