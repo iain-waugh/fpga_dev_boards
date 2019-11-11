@@ -178,7 +178,7 @@ begin  -- fifo_sync_rtl
 
   -- Raise an error if my design assumption is wrong
   -- pragma synthesis_off
-  assert (rd_count = all_ones(rd_count) and rd_count = wr_count)
+  assert not (rd_count = all_ones(rd_count) and wr_count = all_ones(wr_count))
     report "Error: The design assumes that 'rd_count' and 'wr_count' are never all 1's at the same time"
     severity error;
   -- pragma synthesis_on

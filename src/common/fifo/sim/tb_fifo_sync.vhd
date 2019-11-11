@@ -178,7 +178,7 @@ begin  -- architecture tb_fifo_sync_rtl
       if (fifo_rst = '1') then
         first_result <= '1';
       else
-        if (i_rd_en = '1') then
+        if (o_dval = '1') then
           first_result <= '0';
           last_data    <= unsigned(o_data);
         end if;
@@ -190,7 +190,7 @@ begin  -- architecture tb_fifo_sync_rtl
   begin
     if (rising_edge(clk)) then
       if (first_result = '0') then
-        if (i_rd_en = '1') then
+        if (o_dval = '1') then
           if (last_data = C_COUNT_MAX) then
             assert unsigned(o_data) = 0
               report "Non-sequential data coming out" severity warning;
