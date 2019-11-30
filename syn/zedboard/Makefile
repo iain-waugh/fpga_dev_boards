@@ -10,7 +10,7 @@
 # Key project names and directories
 PROJECT = zedboard
 DEVICE  = xc7z020-clg484-1
-OUT_DIR = build
+OUT_DIR = ${PROJECT}_${DEVICE}
 
 
 # =========================================================================
@@ -26,12 +26,15 @@ ROUTE_NAME = ${PROJECT}_route
 
 # =========================================================================
 # Build recipes
-# 00 - Make everything
+# 00 - Miscellaneous 'make' recpies
+#
 # 01a - Load design/cores: read_vhdl xxx.vhd  read_checkpoint xxx.dcp
 # 01b - Synthesis: synth_design
+#
 # 02a - Optimisation: opt_design -verbose
 # 02b - Place: place_design
 # 02c - Route: route_design
+#
 # 03 - BitGen (Bitstream Generation): write_bitstream
 
 
@@ -42,14 +45,13 @@ all: synth route
 
 clean:
 	rm -fR .Xil ${OUT_DIR}
-	rm -f vivado.log vivado.jou vivado_*.backup.log vivado_*.backup.jou
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 01 - Synthesis
 .PHONY: synth
-synth: ${OUT_DIR}/${SYNTH_NAME}.dcp ${SYNTH_NAME}.tcl ${DEVICE}.xdc
-${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd
+synth: ${OUT_DIR}/${SYNTH_NAME}.dcp
+${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${DEVICE}.xdc
 
 # Invoke the synthesis script
 	@echo
@@ -58,14 +60,15 @@ ${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd
 	@echo
 	mkdir -p ${OUT_DIR}
 	vivado -mode batch -source ${SYNTH_NAME}.tcl \
+		-log ${OUT_DIR}/${SYNTH_NAME}.log -journal ${OUT_DIR}/${SYNTH_NAME}.jou \
 		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${DEVICE} ${PROJECT}
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 02 - Optimise, Place and Route: route_design
 .PHONY: route
-route: ${OUT_DIR}/${ROUTE_NAME}.dcp ${ROUTE_NAME}.tcl
-${OUT_DIR}/${ROUTE_NAME}.dcp : ${OUT_DIR}/${SYNTH_NAME}.dcp
+route: ${OUT_DIR}/${ROUTE_NAME}.dcp
+${OUT_DIR}/${ROUTE_NAME}.dcp : ${OUT_DIR}/${SYNTH_NAME}.dcp ${ROUTE_NAME}.tcl
 
 # Invoke the opt, place and route script
 	@echo
@@ -73,4 +76,5 @@ ${OUT_DIR}/${ROUTE_NAME}.dcp : ${OUT_DIR}/${SYNTH_NAME}.dcp
 	@echo '## ---  Running Place and Route  --- ##'
 	@echo
 	vivado -mode batch -source ${ROUTE_NAME}.tcl \
+		-log ${OUT_DIR}/${ROUTE_NAME}.log -journal ${OUT_DIR}/${ROUTE_NAME}.jou \
 		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${ROUTE_NAME} ${PROJECT}
