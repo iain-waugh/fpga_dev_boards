@@ -41,8 +41,8 @@ clean: clean_bit
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 01 - Synthesis
 .PHONY: synth
-synth: ${PROJECT}.ngc ${PROJECT}.prj
-${PROJECT}.ngc : ../../src/${PROJECT}.vhd
+synth: ${PROJECT}.ngc
+${PROJECT}.ngc : ../../src/${PROJECT}.vhd ${PROJECT}.prj
 	@echo
 	@echo
 	@echo '## ---  Running Synthesis  --- ##'
