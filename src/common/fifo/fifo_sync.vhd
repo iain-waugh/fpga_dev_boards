@@ -212,10 +212,10 @@ begin  -- fifo_sync_rtl
             end if;
           else
             -- i_rd_en /= i_wr_en, so i_wr_en must be '1'
-            if (rd_count_zero_extend = wr_count + 2) then
+            if (rd_count_zero_extend = wr_count + 3) then
               full <= '1';
             end if;
-            if (rd_count_zero_extend = wr_count + 1) then
+            if (rd_count_zero_extend = wr_count + 2) then
               full     <= '1';
               wr_error <= '1';
             end if;
