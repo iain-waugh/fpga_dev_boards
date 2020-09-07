@@ -44,21 +44,21 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
   signal data_clk : std_logic := '0';
 
   -- Timing control signals (data_clk domain)
-  signal i_h_sync_time : unsigned(clog2(C_MAX_SYNC) - 1 downto 0);
-  signal i_v_sync_time : unsigned(clog2(C_MAX_SYNC) - 1 downto 0);
+  signal i_h_sync_time : unsigned(num_bits(C_MAX_SYNC) - 1 downto 0);
+  signal i_v_sync_time : unsigned(num_bits(C_MAX_SYNC) - 1 downto 0);
 
-  signal i_h_b_porch_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
-  signal i_h_f_porch_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_b_porch_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_f_porch_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
+  signal i_h_b_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_h_f_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_v_b_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_v_f_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
 
-  signal i_h_b_blank_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
-  signal i_h_f_blank_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_b_blank_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_f_blank_time : unsigned(clog2(C_MAX_PORCH) - 1 downto 0);
+  signal i_h_b_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_h_f_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_v_b_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_v_f_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
 
-  signal i_h_pic_size : unsigned(clog2(C_MAX_SIZE_X) - 1 downto 0);
-  signal i_v_pic_size : unsigned(clog2(C_MAX_SIZE_Y) - 1 downto 0);
+  signal i_h_pic_size : unsigned(num_bits(C_MAX_SIZE_X) - 1 downto 0);
+  signal i_v_pic_size : unsigned(num_bits(C_MAX_SIZE_Y) - 1 downto 0);
 
   signal i_blank_red   : unsigned(C_BITS_RED - 1 downto 0)   := (others => '0');
   signal i_blank_green : unsigned(C_BITS_GREEN - 1 downto 0) := (others => '0');
@@ -87,7 +87,7 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
   signal rst : std_logic := '1';
 
   constant C_COUNT_MAX : natural := 127;
-  signal count         : unsigned(clog2(C_COUNT_MAX) - 1 downto 0);
+  signal count         : unsigned(num_bits(C_COUNT_MAX) - 1 downto 0);
 
 begin  -- architecture tb_vga_driver_rtl
 
@@ -106,25 +106,25 @@ begin  -- architecture tb_vga_driver_rtl
       G_BITS_BLUE  => C_BITS_BLUE)
     port map (
       -- Timing control signals (data_clk domain)
-      i_h_sync_time => to_unsigned(120, clog2(C_MAX_SYNC)),
-      i_v_sync_time => to_unsigned(6, clog2(C_MAX_SYNC)),
+      i_h_sync_time => to_unsigned(120, num_bits(C_MAX_SYNC)),
+      i_v_sync_time => to_unsigned(6, num_bits(C_MAX_SYNC)),
 
-      i_h_b_porch_time => to_unsigned(60, clog2(C_MAX_PORCH)),
-      i_h_f_porch_time => to_unsigned(60, clog2(C_MAX_PORCH)),
-      i_v_b_porch_time => to_unsigned(30, clog2(C_MAX_PORCH)),
-      i_v_f_porch_time => to_unsigned(30, clog2(C_MAX_PORCH)),
+      i_h_b_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
+      i_h_f_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
+      i_v_b_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
+      i_v_f_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
 
-      i_h_b_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
-      i_h_f_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
-      i_v_b_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
-      i_v_f_blank_time => to_unsigned(0, clog2(C_MAX_BLANK)),
+      i_h_b_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
+      i_h_f_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
+      i_v_b_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
+      i_v_f_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
 
-      i_h_pic_size => to_unsigned(800, clog2(C_MAX_SIZE_X)),
-      i_v_pic_size => to_unsigned(600, clog2(C_MAX_SIZE_Y)),
+      i_h_pic_size => to_unsigned(800, num_bits(C_MAX_SIZE_X)),
+      i_v_pic_size => to_unsigned(600, num_bits(C_MAX_SIZE_Y)),
 
-      i_blank_red   => unsigned(all_zeros(C_BITS_RED)),
-      i_blank_green => unsigned(all_zeros(C_BITS_GREEN)),
-      i_blank_blue  => unsigned(all_zeros(C_BITS_BLUE)),
+      i_border_red   => unsigned(all_zeros(C_BITS_RED)),
+      i_border_green => unsigned(all_zeros(C_BITS_GREEN)),
+      i_border_blue  => unsigned(all_zeros(C_BITS_BLUE)),
 
       -- Pixel data and handshaking signals (data_clk domain)
       data_clk      => pixel_clk,       -- Using 'pixel_clk' for now

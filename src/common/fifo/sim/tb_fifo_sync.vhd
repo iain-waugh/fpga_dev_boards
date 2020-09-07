@@ -17,7 +17,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.util_pkg.clog2;
+use work.util_pkg.num_bits;
 
 entity tb_fifo_sync is
 end entity tb_fifo_sync;
@@ -58,8 +58,8 @@ architecture tb_fifo_sync_rtl of tb_fifo_sync is
 
   -- Stimulus counter
   constant C_COUNT_MAX : natural                                       := 126;
-  signal count         : unsigned(clog2(C_COUNT_MAX - 1) - 1 downto 0) := (others => '0');
-  signal data          : unsigned(clog2(C_COUNT_MAX - 1) - 1 downto 0) := (others => '0');
+  signal count         : unsigned(num_bits(C_COUNT_MAX - 1) - 1 downto 0) := (others => '0');
+  signal data          : unsigned(num_bits(C_COUNT_MAX - 1) - 1 downto 0) := (others => '0');
 
   -- Self-checking signals
   signal first_result : std_logic                           := '0';

@@ -18,7 +18,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.util_pkg.clog2;
+use work.util_pkg.num_bits;
 
 entity pulse_gen is
   generic (
@@ -47,7 +47,7 @@ architecture pulse_gen of pulse_gen is
 
   subtype t_count_to_10 is unsigned(3 downto 0);
   type t_counters is array (1 to G_POWERS_OF_100NS - 1) of t_count_to_10;
-  signal count_100ns : unsigned(clog2(G_CLKS_IN_100NS) - 1 downto 0);
+  signal count_100ns : unsigned(num_bits(G_CLKS_IN_100NS) - 1 downto 0);
   signal counter : t_counters := (others => (others => '0'));
 
   signal pulse : std_logic_vector(G_POWERS_OF_100NS - 1 downto 0) := (others => '0');

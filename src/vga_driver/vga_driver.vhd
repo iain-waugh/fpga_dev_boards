@@ -10,8 +10,15 @@
 --
 -- VGA output driver.
 --
--- The next version will have pixel input based on
--- 'fval', 'lval' and 'dval' for video data.
+-- Build-time features:
+--   Max X,Y resolution
+--   Number of bits per RGB component
+--
+-- Run-time features:
+--   Video timings
+--   Picture size
+--   Picture border (example use: aspect ration control)
+--   Border colour
 --
 -------------------------------------------------------------------------------
 
@@ -37,25 +44,26 @@ entity vga_driver is
     );
   port(
     -- Timing control signals (data_clk domain)
-    i_h_sync_time : in unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
-    i_v_sync_time : in unsigned(clog2(G_MAX_SYNC) - 1 downto 0);
+    i_h_sync_time : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
+    i_v_sync_time : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
 
-    i_h_b_porch_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-    i_h_f_porch_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-    i_v_b_porch_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-    i_v_f_porch_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
+    i_h_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_h_f_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_v_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_v_f_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
 
-    i_h_b_blank_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-    i_h_f_blank_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-    i_v_b_blank_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
-    i_v_f_blank_time : in unsigned(clog2(G_MAX_PORCH) - 1 downto 0);
+    i_h_b_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_h_f_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_v_b_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_v_f_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
 
-    i_h_pic_size : in unsigned(clog2(G_MAX_SIZE_X) - 1 downto 0);
-    i_v_pic_size : in unsigned(clog2(G_MAX_SIZE_Y) - 1 downto 0);
+    i_h_pic_size : in unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0);
+    i_v_pic_size : in unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0);
 
-    i_blank_red   : in unsigned(G_BITS_RED - 1 downto 0);
-    i_blank_green : in unsigned(G_BITS_GREEN - 1 downto 0);
-    i_blank_blue  : in unsigned(G_BITS_BLUE - 1 downto 0);
+    -- What colour do you want the border to be?
+    i_border_red   : in unsigned(G_BITS_RED - 1 downto 0);
+    i_border_green : in unsigned(G_BITS_GREEN - 1 downto 0);
+    i_border_blue  : in unsigned(G_BITS_BLUE - 1 downto 0);
 
     -- Pixel data and handshaking signals (data_clk domain)
     data_clk      : in  std_logic;  -- Use pixel clock for the time being (data_clk=pixel_clk)
@@ -94,17 +102,17 @@ architecture vga_driver_rtl of vga_driver is
 
   signal frame_start : std_logic := '0';
 
-  signal h_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0) := (others => '0');
-  signal v_sync_count : unsigned(clog2(G_MAX_SYNC) - 1 downto 0) := (others => '0');
+  signal h_sync_count : unsigned(num_bits(G_MAX_SYNC) - 1 downto 0) := (others => '0');
+  signal v_sync_count : unsigned(num_bits(G_MAX_SYNC) - 1 downto 0) := (others => '0');
 
-  signal h_porch_count : unsigned(clog2(G_MAX_PORCH) - 1 downto 0) := (others => '0');
-  signal v_porch_count : unsigned(clog2(G_MAX_PORCH) - 1 downto 0) := (others => '0');
+  signal h_porch_count : unsigned(num_bits(G_MAX_PORCH) - 1 downto 0) := (others => '0');
+  signal v_porch_count : unsigned(num_bits(G_MAX_PORCH) - 1 downto 0) := (others => '0');
 
-  signal h_blank_count : unsigned(clog2(G_MAX_BLANK) - 1 downto 0) := (others => '0');
-  signal v_blank_count : unsigned(clog2(G_MAX_BLANK) - 1 downto 0) := (others => '0');
+  signal h_blank_count : unsigned(num_bits(G_MAX_BLANK) - 1 downto 0) := (others => '0');
+  signal v_blank_count : unsigned(num_bits(G_MAX_BLANK) - 1 downto 0) := (others => '0');
 
-  signal h_pic_count : unsigned(clog2(G_MAX_SIZE_X) - 1 downto 0) := (others => '0');
-  signal v_pic_count : unsigned(clog2(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
+  signal h_pic_count : unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0) := (others => '0');
+  signal v_pic_count : unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
 
   signal pixel_fifo_reset : std_logic;
   signal pixel_in_data    : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
@@ -390,9 +398,9 @@ begin  -- vga_driver_rtl
         o_vga_green <= unsigned(pixel_out_data(G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_BLUE));
         o_vga_blue  <= unsigned(pixel_out_data(G_BITS_BLUE - 1 downto 0));
       elsif (blank_valid_d2 = '1') then
-        o_vga_red   <= i_blank_red;
-        o_vga_green <= i_blank_green;
-        o_vga_blue  <= i_blank_blue;
+        o_vga_red   <= i_border_red;
+        o_vga_green <= i_border_green;
+        o_vga_blue  <= i_border_blue;
       else
         o_vga_red   <= (others => '0');
         o_vga_green <= (others => '0');

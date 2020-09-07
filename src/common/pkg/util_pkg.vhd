@@ -19,7 +19,7 @@ use ieee.numeric_std.all;
 package util_pkg is
 
   -- Maths functions
-  function clog2(x : natural) return natural;
+  function num_bits(x : natural) return natural;
 
   function maximum(l, r : integer) return integer;
   function minimum(l, r : integer) return integer;
@@ -31,7 +31,7 @@ package util_pkg is
   -- Numerical transforms
   function bin_to_gray(slv : std_logic_vector) return std_logic_vector;
   function gray_to_bin(slv : std_logic_vector) return std_logic_vector;
- 
+
   -- Misc functions
   function all_ones(x  : natural) return std_logic_vector;
   function all_ones(x  : unsigned) return unsigned;
@@ -63,8 +63,8 @@ package body util_pkg is
   -- Maths functions
   -------------------------------------------------------------------------
 
-  -- Ceiling LOG2 = number of bits required to represent the natural input
-  function clog2 (x : natural) return natural is
+  -- Number of bits required to represent the natural input
+  function num_bits (x : natural) return natural is
     variable temp : natural := x;
     variable n    : natural := 1;
   begin
@@ -73,7 +73,7 @@ package body util_pkg is
       n    := n+1;
     end loop;
     return n;
-  end clog2;
+  end num_bits;
 
   function maximum(l, r : integer) return integer is
   begin
@@ -120,7 +120,7 @@ package body util_pkg is
     end loop;
     return v_slv;
   end gray_to_bin;
-  
+
   -------------------------------------------------------------------------
   -- Misc functions
   -------------------------------------------------------------------------

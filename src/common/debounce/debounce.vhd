@@ -40,7 +40,7 @@ architecture debounce_rtl of debounce is
 
   constant C_MAX_COUNT : natural := 16;
 
-  signal stable_count : unsigned(clog2(C_MAX_COUNT)-1 downto 0) := (others => '0');
+  signal stable_count : unsigned(num_bits(C_MAX_COUNT)-1 downto 0) := (others => '0');
 
 begin  -- debounce_rtl
 
