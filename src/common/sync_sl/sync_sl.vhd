@@ -9,6 +9,8 @@
 -- File Name     : sync_sl.vhd
 --
 -- Metastable-hardening for one std_logic (sl) signal
+-- Note: The ASYC_REG attribute is a placement attribute and it goes
+--       on both FFs.
 --
 -------------------------------------------------------------------------------
 
@@ -31,8 +33,9 @@ architecture sync_sl_rtl of sync_sl is
 
   -- Xilinx special attribute to pack 2x FFs right next to each other
   -- with minimal routing delay
-  attribute ASYNC_REG : string;
-  attribute ASYNC_REG of sig_ss: signal is "TRUE";
+  attribute ASYNC_REG           : string;
+  attribute ASYNC_REG of sig_ss : signal is "TRUE";
+  attribute ASYNC_REG of sig    : signal is "TRUE";
 
 begin  -- debounce_rtl
 
