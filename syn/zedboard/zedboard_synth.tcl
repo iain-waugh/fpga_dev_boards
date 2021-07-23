@@ -30,7 +30,7 @@ set_property target_language VHDL [ current_project ]
 read_vhdl "../../src/common/pkg/util_pkg.vhd"
 read_vhdl "../../src/common/sync_sl/sync_sl.vhd"
 read_vhdl "../../src/common/delay_sl/delay_sl.vhd"
-read_vhdl "../../src/common/clk_gen/clk_gen_s6.vhd"
+read_vhdl "../../src/common/clk_gen/clk_gen_z7.vhd"
 read_vhdl "../../src/common/pulse_gen/pulse_gen.vhd"
 read_vhdl "../../src/common/debounce/debounce.vhd"
 read_vhdl "../../src/common/fifo/fifo_sync.vhd"
