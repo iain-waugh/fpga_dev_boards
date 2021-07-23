@@ -83,6 +83,8 @@ end clk_gen;
 
 architecture clk_gen_rtl of clk_gen is
 
+  constant C_NUM_PLL_OUTPUTS : natural := 6;
+
   -- PLL system control signals
   signal clk_ibufg  : std_logic;
   signal clk_fb_out : std_logic;
@@ -163,7 +165,7 @@ begin  -- clk_gen_rtl
   -- Create clock outputs
 
   -- Put a global clock buffer on every output that we use
-  clk_gen : for i in 0 to 5 generate
+  clk_gen : for i in 0 to C_NUM_PLL_OUTPUTS - 1 generate
     -- Hook up the clocks that we use...
     u_clk_int_bufg_gen : if i < G_CLOCKS_USED generate
       u_clk_int_bufg : BUFG
@@ -199,7 +201,7 @@ begin  -- clk_gen_rtl
       );
 
   -- Generate reset outputs that are synchronous to their respective clock domains
-  rst_gen : for i in 0 to 5 generate
+  rst_gen : for i in 0 to C_NUM_PLL_OUTPUTS - 1 generate
     -- Hook up the resets that we use...
     u_rst_out_gen : if i < G_CLOCKS_USED generate
       sync_rst : entity work.sync_sl
