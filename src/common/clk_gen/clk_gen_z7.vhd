@@ -107,7 +107,7 @@ begin  -- clk_gen_rtl
     port map (I => clk,
               O => clk_ibuf);
 
-  u_pll : MMCM_BASE
+  u_pll : MMCME2_BASE
     generic map (
       BANDWIDTH          => "OPTIMIZED",     -- "HIGH", "LOW" or "OPTIMIZED"
       CLKFBOUT_MULT_F    => real(G_CLKFBOUT_MULT),  -- Multiply value for all CLKOUT clock outputs (1-64)
@@ -135,7 +135,6 @@ begin  -- clk_gen_rtl
       CLKOUT4_PHASE      => G_CLKOUT4_PHASE,
       CLKOUT5_PHASE      => G_CLKOUT5_PHASE,
 
-      CLOCK_HOLD    => false,
       DIVCLK_DIVIDE => 1,        -- Division value for all output clocks (1-52)
       REF_JITTER1   => 0.05,     -- Reference Clock Jitter in UI (0.000-0.999).
       STARTUP_WAIT  => false
@@ -192,7 +191,7 @@ begin  -- clk_gen_rtl
 
   -- Synchronise the 'locked' signal to the clk0 domain and delay it
   -- by 16 cycles to give a bit of extra time to stabilise
-  -- (it's an old habit, possibly not necessary)
+  -- (it's an old habit from Spartan 3 days; possibly not necessary with newer PLLs)
   u_delay_locked : SRL16E
     generic map (
       INIT => X"0000")
