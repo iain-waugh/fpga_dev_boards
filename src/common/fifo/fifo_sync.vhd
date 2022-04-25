@@ -104,16 +104,15 @@ begin  -- fifo_sync_rtl
   -- Infer the RAM; handle reads and writes
   u_ram_wr : process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (i_wr_en = '1') then
+    if rising_edge(clk) then
+      if i_wr_en = '1' then
         ram(to_integer(wr_count)) <= i_data;
       end if;
     end if;
   end process u_ram_wr;
-  -- Use a "to_01" function to get rid of 'X'es when simulations start
   u_ram_rd : process (clk)
   begin
-    if (rising_edge(clk)) then
+    if rising_edge(clk) then
       data_raw <= ram(to_integer(rd_count));
     end if;
   end process u_ram_rd;
@@ -121,29 +120,30 @@ begin  -- fifo_sync_rtl
   -- Create a read-valid signal
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         rd_vld <= '0';
       else
         rd_vld <= i_rd_en;
       end if;
     end if;
   end process;
+  -- Resolve 'data" with a "to_01" function to get rid of 'X'es when simulations start
   data <= to_01(data_raw);
 
   ----------------------------------------------------------------------
   -- Handle the counters
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         wr_count <= (others => '0');
         rd_count <= (others => '0');
       else
-        if (i_rd_en = '1') then
+        if i_rd_en = '1' then
           rd_count <= rd_count + 1;
         end if;
-        if (i_wr_en = '1') then
+        if i_wr_en = '1' then
           wr_count <= wr_count + 1;
         end if;
       end if;
@@ -156,16 +156,16 @@ begin  -- fifo_sync_rtl
   -- Assumption: Write and read will NEVER reach all ones at the same time
   wr_wrap_flag : process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         rd_wrapped <= '0';
         wr_wrapped <= '0';
       else
-        if (i_wr_en = '1' and wr_count = all_ones(wr_count)) then
+        if i_wr_en = '1' and wr_count = all_ones(wr_count) then
           -- Write wrapped; it's still ahead of the read pointer
           rd_wrapped <= '0';
           wr_wrapped <= '1';
-        elsif (i_rd_en = '1' and rd_count = all_ones(rd_count)) then
+        elsif i_rd_en = '1' and rd_count = all_ones(rd_count) then
           -- Read wrapped, so read is a lower number than the write pointer
           rd_wrapped <= '1';
           wr_wrapped <= '0';
@@ -189,33 +189,33 @@ begin  -- fifo_sync_rtl
   -- If rd_count = wr_count + 1, the FIFO is full
   set_levels : process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         empty    <= '1';
         full     <= '0';
         rd_error <= '0';
         wr_error <= '0';
       else
         -- The flags can only change if read/write are different
-        if (i_rd_en /= i_wr_en) then
+        if i_rd_en /= i_wr_en then
           -- Default values for signals
           full  <= '0';
           empty <= '0';
 
-          if (i_rd_en = '1') then
-            if (rd_count_zero_extend + 1 = wr_count_wrap) then
+          if i_rd_en = '1' then
+            if rd_count_zero_extend + 1 = wr_count_wrap then
               empty <= '1';
             end if;
-            if (rd_count_zero_extend = wr_count_wrap) then
+            if rd_count_zero_extend = wr_count_wrap then
               empty    <= '1';
               rd_error <= '1';
             end if;
           else
             -- i_rd_en /= i_wr_en, so i_wr_en must be '1'
-            if (rd_count_zero_extend = wr_count + 3) then
+            if rd_count_zero_extend = wr_count + 3 then
               full <= '1';
             end if;
-            if (rd_count_zero_extend = wr_count + 2) then
+            if rd_count_zero_extend = wr_count + 2 then
               full     <= '1';
               wr_error <= '1';
             end if;
@@ -237,7 +237,7 @@ begin  -- fifo_sync_rtl
   out_registered : if G_REGISTER_OUT = true generate
     u_reg_out : process (clk)
     begin
-      if(rising_edge(clk)) then
+      if rising_edge(clk) then
         o_data <= data;
         o_dval <= rd_vld;
       end if;

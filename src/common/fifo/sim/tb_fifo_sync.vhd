@@ -126,11 +126,11 @@ begin  -- architecture tb_fifo_sync_rtl
   --  signal   count       : natural range 0 to C_COUNT_MAX;
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         count <= (others => '0');
       else
-        if (count < C_COUNT_MAX) then
+        if count < C_COUNT_MAX then
           count <= count + 1;
         else
           count <= (others => '0');
@@ -141,14 +141,14 @@ begin  -- architecture tb_fifo_sync_rtl
 
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         data <= (others => '0');
       else
         i_wr_en <= '0';
-        if ((count(3) xor count(1)) = '1' and o_full = '0') then
+        if (count(3) xor count(0)) = '1' and o_full = '0' then
           i_wr_en <= '1';
-          if (data < C_COUNT_MAX) then
+          if data < C_COUNT_MAX then
             data <= data + 1;
           else
             data <= (others => '0');
@@ -160,8 +160,8 @@ begin  -- architecture tb_fifo_sync_rtl
 
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(clk) then
+      if rst = '1' then
         i_data <= (others => '1');
       else
         i_data <= std_logic_vector(resize(data, i_data'length));
@@ -174,11 +174,11 @@ begin  -- architecture tb_fifo_sync_rtl
   -- Check the results
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (fifo_rst = '1') then
+    if rising_edge(clk) then
+      if fifo_rst = '1' then
         first_result <= '1';
       else
-        if (o_dval = '1') then
+        if o_dval = '1' then
           first_result <= '0';
           last_data    <= unsigned(o_data);
         end if;
@@ -188,10 +188,10 @@ begin  -- architecture tb_fifo_sync_rtl
 
   process (clk)
   begin
-    if (rising_edge(clk)) then
-      if (first_result = '0') then
-        if (o_dval = '1') then
-          if (last_data = C_COUNT_MAX) then
+    if rising_edge(clk) then
+      if first_result = '0' then
+        if o_dval = '1' then
+          if last_data = C_COUNT_MAX then
             assert unsigned(o_data) = 0
               report "Non-sequential data coming out" severity warning;
           else
