@@ -114,6 +114,8 @@ architecture vga_driver_rtl of vga_driver is
   signal h_pic_count : unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0) := (others => '0');
   signal v_pic_count : unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
 
+  constant C_PIXEL_FIFO_DEPTH : natural := 4;
+  
   signal pixel_fifo_reset : std_logic;
   signal pixel_in_data    : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
   signal pixel_out_data   : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
@@ -349,7 +351,7 @@ begin  -- vga_driver_rtl
   pixel_fifo : entity work.fifo_sync
     generic map (
       G_DATA_WIDTH => G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE,
-      G_LOG2_DEPTH => 4,
+      G_LOG2_DEPTH => C_PIXEL_FIFO_DEPTH,
 
       G_REGISTER_OUT => true,
 
@@ -363,18 +365,26 @@ begin  -- vga_driver_rtl
       clk => pixel_clk,
       rst => pixel_fifo_reset,
 
+      -- How far away from "full" or "empty"
+      --   should the "almost full" and "almost empty" be?
+      i_dist_from_full  => to_unsigned(0, C_PIXEL_FIFO_DEPTH),
+      i_dist_from_empty => to_unsigned(0, C_PIXEL_FIFO_DEPTH),
+
       -- Write ports
-      i_data     => pixel_in_data,
-      i_wr_en    => i_pixel_dval,
-      o_full     => pixel_fifo_full,
-      o_wr_error => wr_error,
+      i_data        => pixel_in_data,
+      i_wr_en       => i_pixel_dval,
+      o_almost_full => open,
+      o_full        => pixel_fifo_full,
+      o_wr_error    => wr_error,
 
       -- Read ports
-      o_empty    => pixel_fifo_empty,
-      i_rd_en    => pic_valid_d1,
-      o_data     => pixel_out_data,
-      o_dval     => pixel_dval,
-      o_rd_error => rd_error);
+      o_almost_empty => open,
+      o_empty        => pixel_fifo_empty,
+      i_rd_en        => pic_valid_d1,
+      o_data         => pixel_out_data,
+      o_dval         => pixel_dval,
+      o_rd_error     => rd_error
+      );
 
   ----------------------------------------------------------------------
   -- Register the outputs and hold the RGB output low when we're not

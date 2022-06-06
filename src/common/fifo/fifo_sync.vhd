@@ -49,18 +49,27 @@ entity fifo_sync is
     clk : in std_logic;
     rst : in std_logic;
 
+    -- How far away from "full" or "empty"
+    --   should the "almost full" and "almost empty" be?
+    i_dist_from_full  : in unsigned(G_LOG2_DEPTH - 1 downto 0);
+    i_dist_from_empty : in unsigned(G_LOG2_DEPTH - 1 downto 0);
+
     -- Write ports
-    i_data     : in  std_logic_vector(G_DATA_WIDTH - 1 downto 0);
-    i_wr_en    : in  std_logic;
-    o_full     : out std_logic;
-    o_wr_error : out std_logic;
+    i_data        : in  std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+    i_wr_en       : in  std_logic;
+    o_almost_full : out std_logic;
+    o_full        : out std_logic;
+    o_wr_error    : out std_logic;
 
     -- Read ports
-    o_empty    : out std_logic;
-    i_rd_en    : in  std_logic;
-    o_data     : out std_logic_vector(G_DATA_WIDTH - 1 downto 0);
-    o_dval     : out std_logic;
-    o_rd_error : out std_logic
+    o_almost_empty : out std_logic;
+    o_empty        : out std_logic;
+    i_rd_en        : in  std_logic;
+    o_data         : out std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+    o_dval         : out std_logic;
+    o_rd_error     : out std_logic;
+
+    i_debug_dump : in std_logic := '0'
     );
 end fifo_sync;
 

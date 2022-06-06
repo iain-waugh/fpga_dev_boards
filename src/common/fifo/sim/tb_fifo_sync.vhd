@@ -41,29 +41,38 @@ architecture tb_fifo_sync_rtl of tb_fifo_sync is
   signal clk : std_logic := '0';
   signal rst : std_logic := '0';
 
+  -- How far away from "full" or "empty"
+  --   should the "almost full" and "almost empty" be?
+  signal i_dist_from_full  : unsigned(G_LOG2_DEPTH - 1 downto 0);
+  signal i_dist_from_empty : unsigned(G_LOG2_DEPTH - 1 downto 0);
+
   -- Write ports
-  signal i_data     : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
-  signal i_wr_en    : std_logic                                   := '0';
-  signal o_full     : std_logic;
-  signal o_wr_error : std_logic;
+  signal i_data        : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
+  signal i_wr_en       : std_logic                                   := '0';
+  signal o_almost_full : std_logic;
+  signal o_full        : std_logic;
+  signal o_wr_error    : std_logic;
 
   -- Read ports
-  signal o_empty    : std_logic;
-  signal i_rd_en    : std_logic := '0';
-  signal o_data     : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
-  signal o_dval     : std_logic;
-  signal o_rd_error : std_logic;
+  signal o_almost_empty : std_logic;
+  signal o_empty        : std_logic;
+  signal i_rd_en        : std_logic := '0';
+  signal o_data         : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+  signal o_dval         : std_logic;
+  signal o_rd_error     : std_logic;
 
   signal fifo_rst : std_logic := '0';
 
   -- Stimulus counter
-  constant C_COUNT_MAX : natural                                       := 126;
+  constant C_COUNT_MAX : natural                                          := 126;
   signal count         : unsigned(num_bits(C_COUNT_MAX - 1) - 1 downto 0) := (others => '0');
   signal data          : unsigned(num_bits(C_COUNT_MAX - 1) - 1 downto 0) := (others => '0');
 
   -- Self-checking signals
   signal first_result : std_logic                           := '0';
   signal last_data    : unsigned(G_DATA_WIDTH - 1 downto 0) := (others => '0');
+
+  signal i_debug_dump : std_logic;
 
 begin  -- architecture tb_fifo_sync_rtl
 
@@ -85,18 +94,65 @@ begin  -- architecture tb_fifo_sync_rtl
       clk => clk,
       rst => fifo_rst,
 
+      -- How far away from "full" or "empty"
+      --   should the "almost full" and "almost empty" be?
+      i_dist_from_full  => to_unsigned(0, G_LOG2_DEPTH),
+      i_dist_from_empty => to_unsigned(0, G_LOG2_DEPTH),
+
       -- Write ports
-      i_data     => i_data,
-      i_wr_en    => i_wr_en,
-      o_full     => o_full,
-      o_wr_error => o_wr_error,
+      i_data        => i_data,
+      i_wr_en       => i_wr_en,
+      o_almost_full => open,
+      o_full        => o_full,
+      o_wr_error    => o_wr_error,
 
       -- Read ports
-      o_empty    => o_empty,
-      i_rd_en    => i_rd_en,
-      o_data     => o_data,
-      o_dval     => o_dval,
-      o_rd_error => o_rd_error);
+      o_almost_empty => open,
+      o_empty        => o_empty,
+      i_rd_en        => i_rd_en,
+      o_data         => o_data,
+      o_dval         => o_dval,
+      o_rd_error     => o_rd_error);
+
+  fifo_sync_1 : entity work.fifo_sync
+    generic map (
+      G_DATA_WIDTH => G_DATA_WIDTH,
+      G_LOG2_DEPTH => G_LOG2_DEPTH,
+
+      -- Leave this as "true" unless you have to have low latency
+      G_REGISTER_OUT => G_REGISTER_OUT,
+
+      -- RAM styles:
+      -- Xilinx: "block", "distributed", "registers" or "uram"
+      -- Altera: "logic", "M512", "M4K", "M9K", "M20K", "M144K", "MLAB", or "M-RAM"
+      -- Lattice: "registers", "distributed" or "block_ram"
+      G_RAM_STYLE => G_RAM_STYLE)
+    port map (
+      -- Clock and Reset signals
+      clk => clk,
+      rst => rst,
+
+      -- How far away from "full" or "empty"
+      --   should the "almost full" and "almost empty" be?
+      i_dist_from_full  => i_dist_from_full,
+      i_dist_from_empty => i_dist_from_empty,
+
+      -- Write ports
+      i_data        => i_data,
+      i_wr_en       => i_wr_en,
+      o_almost_full => o_almost_full,
+      o_full        => o_full,
+      o_wr_error    => o_wr_error,
+
+      -- Read ports
+      o_almost_empty => o_almost_empty,
+      o_empty        => o_empty,
+      i_rd_en        => i_rd_en,
+      o_data         => o_data,
+      o_dval         => o_dval,
+      o_rd_error     => o_rd_error,
+
+      i_debug_dump => i_debug_dump);
 
   -------------------------------------------------------------------------------
   -- System clock generation
