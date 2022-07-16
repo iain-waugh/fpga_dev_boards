@@ -115,11 +115,10 @@ architecture vga_driver_rtl of vga_driver is
   signal v_pic_count : unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
 
   constant C_PIXEL_FIFO_DEPTH : natural := 4;
-  
+
   signal pixel_fifo_reset : std_logic;
   signal pixel_in_data    : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
   signal pixel_out_data   : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
-  signal pixel_dval       : std_logic;
   signal pixel_fifo_full  : std_logic;
   signal pixel_fifo_empty : std_logic;
   signal pic_valid_d1     : std_logic;
@@ -365,11 +364,6 @@ begin  -- vga_driver_rtl
       clk => pixel_clk,
       rst => pixel_fifo_reset,
 
-      -- How far away from "full" or "empty"
-      --   should the "almost full" and "almost empty" be?
-      i_dist_from_full  => to_unsigned(0, C_PIXEL_FIFO_DEPTH),
-      i_dist_from_empty => to_unsigned(0, C_PIXEL_FIFO_DEPTH),
-
       -- Write ports
       i_data        => pixel_in_data,
       i_wr_en       => i_pixel_dval,
@@ -382,7 +376,6 @@ begin  -- vga_driver_rtl
       o_empty        => pixel_fifo_empty,
       i_rd_en        => pic_valid_d1,
       o_data         => pixel_out_data,
-      o_dval         => pixel_dval,
       o_rd_error     => rd_error
       );
 
@@ -400,8 +393,7 @@ begin  -- vga_driver_rtl
   process (pixel_clk)
   begin
     if (rising_edge(pixel_clk)) then
-      o_frame_sync  <= frame_start;
-      o_pixel_ready <= not pixel_fifo_full;
+      o_frame_sync <= frame_start;
 
       if (pic_valid_d2 = '1') then
         o_vga_red   <= unsigned(pixel_out_data(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_GREEN + G_BITS_BLUE));
@@ -417,8 +409,9 @@ begin  -- vga_driver_rtl
         o_vga_blue  <= (others => '0');
       end if;
 
-      o_error <= wr_error or rd_error;
     end if;
   end process;
+  o_pixel_ready <= not pixel_fifo_full;
+  o_error       <= wr_error or rd_error;
 
 end vga_driver_rtl;
