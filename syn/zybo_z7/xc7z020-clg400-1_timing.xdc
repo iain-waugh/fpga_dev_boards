@@ -1,4 +1,4 @@
 # ----------------------------------------------------------------------------
 # Zedboard timing constraints
 
-create_clock -name clk_100Mhz -period 10 [get_ports clk_100MHz]
+create_clock -name clk_125MHz -period 8 [get_ports clk_125MHz]

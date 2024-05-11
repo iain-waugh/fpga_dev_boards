@@ -8,8 +8,8 @@
 
 # =========================================================================
 # Key project names and directories
-PROJECT = zedboard
-DEVICE  = xc7z020-clg484-1
+PROJECT = zybo_z7
+DEVICE  = xc7z020-clg400-1
 OUT_DIR = ${PROJECT}_${DEVICE}
 
 

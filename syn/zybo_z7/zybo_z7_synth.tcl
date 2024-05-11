@@ -38,15 +38,15 @@ read_vhdl "../../src/common/fifo/fifo_sync.vhd"
 # Hello World
 read_vhdl "../../src/hello_world/hello_world.vhd"
 
-# VGA Output
-read_vhdl "../../src/vga_driver/vga_driver.vhd"
+# DVI/HDMI Output
+#read_vhdl "../../src/dvi_driver/dvi_driver.vhd"
 
 # Main file
-read_vhdl "../../src/zedboard.vhd"
+read_vhdl "../../src/zybo_z7.vhd"
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Read physical and timing constraints from one of more files
+# Read timing constraints from one of more files
 #   Options used are:
 #     (none)
 read_xdc ${DEVICE}.xdc
