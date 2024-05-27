@@ -364,7 +364,6 @@ begin  -- zedboard_rtl
     generic map (
       G_MAX_SYNC  => C_MAX_SYNC,
       G_MAX_PORCH => C_MAX_PORCH,
-      G_MAX_BLANK => C_MAX_BLANK,
 
       G_MAX_SIZE_X => C_MAX_SIZE_X,
       G_MAX_SIZE_Y => C_MAX_SIZE_Y,
@@ -373,37 +372,40 @@ begin  -- zedboard_rtl
       G_BITS_GREEN => C_BITS_GREEN,
       G_BITS_BLUE  => C_BITS_BLUE)
     port map (
-      -- Timing control signals (data_clk domain)
-      i_h_sync_time => to_unsigned(120, num_bits(C_MAX_SYNC)),
-      i_v_sync_time => to_unsigned(6, num_bits(C_MAX_SYNC)),
+      pixel_clk => pixel_clk,
 
-      i_h_b_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
+      -- Horizontal signals
       i_h_f_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
-      i_v_b_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
+      i_h_sync_time    => to_unsigned(120, num_bits(C_MAX_SYNC)),
+      i_h_b_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
+
+      -- Vertical signals
       i_v_f_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
+      i_v_sync_time    => to_unsigned(6, num_bits(C_MAX_SYNC)),
+      i_v_b_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
 
-      i_h_b_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
-      i_h_f_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
-      i_v_b_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
-      i_v_f_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
+      -- Un-addressable border colour
+      i_h_border_size => to_unsigned(800-640, num_bits(C_MAX_SIZE_X)),
+      i_v_border_size => to_unsigned(600-480, num_bits(C_MAX_SIZE_Y)),
 
-      i_h_pic_size => to_unsigned(800, num_bits(C_MAX_SIZE_X)),
-      i_v_pic_size => to_unsigned(600, num_bits(C_MAX_SIZE_Y)),
+      -- Addressable video
+      i_h_pic_size => to_unsigned(640, num_bits(C_MAX_SIZE_X)),
+      i_v_pic_size => to_unsigned(480, num_bits(C_MAX_SIZE_Y)),
 
+      -- What colour do you want the border to be?
       i_border_red   => unsigned(all_zeros(C_BITS_RED)),
       i_border_green => unsigned(all_zeros(C_BITS_GREEN)),
       i_border_blue  => unsigned(all_zeros(C_BITS_BLUE)),
 
-      -- Pixel data and handshaking signals (data_clk domain)
-      data_clk      => pixel_clk,       -- Using 'pixel_clk' for now
+      -- Pixel data and handshaking signals
       o_pixel_ready => pixel_in_ready,
+      o_p_fifo_half => open,
       i_pixel_red   => pixel_red,
       i_pixel_green => pixel_green,
       i_pixel_blue  => pixel_blue,
       i_pixel_dval  => pixel_dval,
 
-      -- VGA signals (pixel_clk domain)
-      pixel_clk    => pixel_clk,
+      -- Video signals
       i_frame_sync => frame_sync_ext,
       o_frame_sync => frame_sync_local,
 
