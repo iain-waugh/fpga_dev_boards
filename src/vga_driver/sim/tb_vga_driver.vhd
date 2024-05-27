@@ -39,103 +39,131 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
   constant C_BITS_GREEN : natural := 6;
   constant C_BITS_BLUE  : natural := 5;
 
-  -- component ports
-  -- Clock and Reset signals
-  signal data_clk : std_logic := '0';
+  constant C_LOG2_PIXEL_FIFO_DEPTH : natural := 5;
 
-  -- Timing control signals (data_clk domain)
-  signal i_h_sync_time : unsigned(num_bits(C_MAX_SYNC) - 1 downto 0);
-  signal i_v_sync_time : unsigned(num_bits(C_MAX_SYNC) - 1 downto 0);
+  signal pixel_clk : std_logic;
 
-  signal i_h_b_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  -- Horizontal signals
   signal i_h_f_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_b_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_h_sync_time    : unsigned(num_bits(C_MAX_SYNC) - 1 downto 0);
+  signal i_h_b_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+
+  -- Vertical signals
   signal i_v_f_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  signal i_v_sync_time    : unsigned(num_bits(C_MAX_SYNC) - 1 downto 0);
+  signal i_v_b_porch_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
 
-  signal i_h_b_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
-  signal i_h_f_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_b_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
-  signal i_v_f_blank_time : unsigned(num_bits(C_MAX_PORCH) - 1 downto 0);
+  -- Un-addressable border colour
+  signal i_h_border_size : unsigned(num_bits(C_MAX_SIZE_X) - 1 downto 0);
+  signal i_v_border_size : unsigned(num_bits(C_MAX_SIZE_Y) - 1 downto 0);
 
+  -- Addressable video
   signal i_h_pic_size : unsigned(num_bits(C_MAX_SIZE_X) - 1 downto 0);
   signal i_v_pic_size : unsigned(num_bits(C_MAX_SIZE_Y) - 1 downto 0);
 
-  signal i_blank_red   : unsigned(C_BITS_RED - 1 downto 0)   := (others => '0');
-  signal i_blank_green : unsigned(C_BITS_GREEN - 1 downto 0) := (others => '0');
-  signal i_blank_blue  : unsigned(C_BITS_BLUE - 1 downto 0)  := (others => '0');
+  -- What colour do you want the border to be?
+  signal i_border_red   : unsigned(C_BITS_RED - 1 downto 0);
+  signal i_border_green : unsigned(C_BITS_GREEN - 1 downto 0);
+  signal i_border_blue  : unsigned(C_BITS_BLUE - 1 downto 0);
 
-  -- Pixel data and handshaking signals (data_clk domain)
-  signal o_pixel_ready : std_logic;  -- Only take valid data when 'ready' is high
-  signal pixel_red   : unsigned(C_BITS_RED - 1 downto 0)   := (others => '0');
-  signal pixel_green : unsigned(C_BITS_GREEN - 1 downto 0) := (others => '0');
-  signal pixel_blue  : unsigned(C_BITS_BLUE - 1 downto 0)  := (others => '0');
-  signal pixel_dval  : std_logic                           := '0';
+  -- Pixel data and handshaking signals
+  signal o_pixel_ready : std_logic;
+  signal o_p_fifo_half : std_logic;
+  signal i_pixel_red   : unsigned(C_BITS_RED - 1 downto 0);
+  signal i_pixel_green : unsigned(C_BITS_GREEN - 1 downto 0);
+  signal i_pixel_blue  : unsigned(C_BITS_BLUE - 1 downto 0);
+  signal i_pixel_dval  : std_logic;
 
-  -- VGA Signals
-  signal pixel_clk    : std_logic := '0';
-  signal i_frame_sync : std_logic := '0';
-  signal o_frame_sync : std_logic := '0';
+  -- Video signals
+  signal i_frame_sync : std_logic;
+  signal o_frame_sync : std_logic;
 
-  signal o_vga_hs : std_logic := '0';
-  signal o_vga_vs : std_logic := '0';
+  signal o_vga_hs : std_logic;
+  signal o_vga_vs : std_logic;
 
-  signal o_vga_red   : unsigned(C_BITS_RED - 1 downto 0)   := (others => '0');
-  signal o_vga_green : unsigned(C_BITS_GREEN - 1 downto 0) := (others => '0');
-  signal o_vga_blue  : unsigned(C_BITS_BLUE - 1 downto 0)  := (others => '0');
+  signal o_vga_red   : unsigned(C_BITS_RED - 1 downto 0);
+  signal o_vga_green : unsigned(C_BITS_GREEN - 1 downto 0);
+  signal o_vga_blue  : unsigned(C_BITS_BLUE - 1 downto 0);
 
-  signal clk : std_logic := '0';
-  signal rst : std_logic := '1';
+  signal o_error : std_logic;
 
   constant C_COUNT_MAX : natural := 127;
   signal count         : unsigned(num_bits(C_COUNT_MAX) - 1 downto 0);
 
 begin  -- architecture tb_vga_driver_rtl
 
+  -- Horizontal signals
+   i_h_f_porch_time <= to_unsigned(8, num_bits(C_MAX_PORCH));
+   i_h_sync_time    <= to_unsigned(32, num_bits(C_MAX_SYNC));
+   i_h_b_porch_time <= to_unsigned(40, num_bits(C_MAX_PORCH));
+
+  -- Vertical signals
+   i_v_f_porch_time <= to_unsigned(3, num_bits(C_MAX_PORCH));
+   i_v_sync_time    <= to_unsigned(6, num_bits(C_MAX_SYNC));
+   i_v_b_porch_time <= to_unsigned(6, num_bits(C_MAX_PORCH));
+
+  -- Un-addressable border colour
+   i_h_border_size <= to_unsigned(80, num_bits(C_MAX_SIZE_X));
+   i_v_border_size <= to_unsigned(15, num_bits(C_MAX_SIZE_Y));
+
+   -- Addressable video
+   i_h_pic_size <= to_unsigned(320, num_bits(C_MAX_SIZE_X));
+   i_v_pic_size <= to_unsigned(200, num_bits(C_MAX_SIZE_Y));
+
+   -- What colour do you want the border to be?
+   i_border_red   <= to_unsigned(7, C_BITS_RED);
+   i_border_green <= to_unsigned(7, C_BITS_GREEN);
+   i_border_blue  <= to_unsigned(7, C_BITS_BLUE);
+
   -- Component instantiation
   DUT : entity work.vga_driver
     generic map (
       G_MAX_SYNC  => C_MAX_SYNC,
       G_MAX_PORCH => C_MAX_PORCH,
-      G_MAX_BLANK => C_MAX_BLANK,
 
       G_MAX_SIZE_X => C_MAX_SIZE_X,
       G_MAX_SIZE_Y => C_MAX_SIZE_Y,
 
       G_BITS_RED   => C_BITS_RED,
       G_BITS_GREEN => C_BITS_GREEN,
-      G_BITS_BLUE  => C_BITS_BLUE)
+      G_BITS_BLUE  => C_BITS_BLUE,
+
+      G_LOG2_PIXEL_FIFO_DEPTH => C_LOG2_PIXEL_FIFO_DEPTH)
     port map (
-      -- Timing control signals (data_clk domain)
-      i_h_sync_time => to_unsigned(120, num_bits(C_MAX_SYNC)),
-      i_v_sync_time => to_unsigned(6, num_bits(C_MAX_SYNC)),
+      pixel_clk => pixel_clk,
 
-      i_h_b_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
-      i_h_f_porch_time => to_unsigned(60, num_bits(C_MAX_PORCH)),
-      i_v_b_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
-      i_v_f_porch_time => to_unsigned(30, num_bits(C_MAX_PORCH)),
+      -- Horizontal signals
+      i_h_f_porch_time => i_h_f_porch_time,
+      i_h_sync_time    => i_h_sync_time,
+      i_h_b_porch_time => i_h_b_porch_time,
 
-      i_h_b_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
-      i_h_f_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
-      i_v_b_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
-      i_v_f_blank_time => to_unsigned(0, num_bits(C_MAX_BLANK)),
+      -- Vertical signals
+      i_v_f_porch_time => i_v_f_porch_time,
+      i_v_sync_time    => i_v_sync_time,
+      i_v_b_porch_time => i_v_b_porch_time,
 
-      i_h_pic_size => to_unsigned(800, num_bits(C_MAX_SIZE_X)),
-      i_v_pic_size => to_unsigned(600, num_bits(C_MAX_SIZE_Y)),
+      -- Un-addressable border colour
+      i_h_border_size => i_h_border_size,
+      i_v_border_size => i_v_border_size,
 
-      i_border_red   => unsigned(all_zeros(C_BITS_RED)),
-      i_border_green => unsigned(all_zeros(C_BITS_GREEN)),
-      i_border_blue  => unsigned(all_zeros(C_BITS_BLUE)),
+      -- Addressable video
+      i_h_pic_size => i_h_pic_size,
+      i_v_pic_size => i_v_pic_size,
 
-      -- Pixel data and handshaking signals (data_clk domain)
-      data_clk      => pixel_clk,       -- Using 'pixel_clk' for now
+      -- What colour do you want the border to be?
+      i_border_red   => i_border_red,
+      i_border_green => i_border_green,
+      i_border_blue  => i_border_blue,
+
+      -- Pixel data and handshaking signals
       o_pixel_ready => o_pixel_ready,
-      i_pixel_red   => pixel_red,
-      i_pixel_green => pixel_green,
-      i_pixel_blue  => pixel_blue,
-      i_pixel_dval  => pixel_dval,
+      o_p_fifo_half => o_p_fifo_half,
+      i_pixel_red   => i_pixel_red,
+      i_pixel_green => i_pixel_green,
+      i_pixel_blue  => i_pixel_blue,
+      i_pixel_dval  => i_pixel_dval,
 
-      -- VGA signals (pixel_clk domain)
-      pixel_clk    => pixel_clk,
+      -- Video signals
       i_frame_sync => i_frame_sync,
       o_frame_sync => o_frame_sync,
 
@@ -146,44 +174,40 @@ begin  -- architecture tb_vga_driver_rtl
       o_vga_green => o_vga_green,
       o_vga_blue  => o_vga_blue,
 
-      o_error => open
-      );
+      o_error => o_error);
 
   -------------------------------------------------------------------------------
   -- System clock generation
   clk_gen : process
   begin
-    clk <= '0';
+    pixel_clk <= '0';
     wait for 5 ns;
-    clk <= '1';
+    pixel_clk <= '1';
     wait for 5 ns;
   end process clk_gen;
-  pixel_clk <= clk;
-  data_clk  <= clk;
 
   -----------------------------------------------------------------------------
   -- Reset generation
   rst_gen : process
   begin
-    rst <= '1';
+    i_frame_sync <= '1';
     wait for 100 ns;
-    rst <= '0';
+    i_frame_sync <= '0';
     wait;
   end process rst_gen;
-  i_frame_sync <= rst;
 
   ----------------------------------------------------------------------
   -- Counter
   --  constant C_COUNT_MAX : natural := 127;
   --  signal   count       : natural range 0 to C_COUNT_MAX;
-  process (clk)
+  process (pixel_clk)
   begin
-    if (rising_edge(clk)) then
-      if (rst = '1') then
+    if rising_edge(pixel_clk) then
+      if (i_frame_sync = '1') then
         count <= (others => '0');
       else
-        if (o_pixel_ready = '1') then
-          if (count < C_COUNT_MAX) then
+        if o_pixel_ready = '1' then
+          if count < C_COUNT_MAX then
             count <= count + 1;
           else
             count <= (others => '0');
@@ -193,10 +217,10 @@ begin  -- architecture tb_vga_driver_rtl
     end if;
   end process;
 
-  pixel_red   <= count(pixel_red'high downto 0);
-  pixel_green <= count(pixel_green'high downto 0);
-  pixel_blue  <= count(pixel_blue'high downto 0);
-  pixel_dval  <= o_pixel_ready and not rst;
+  i_pixel_red   <= count(i_pixel_red'high downto 0);
+  i_pixel_green <= count(i_pixel_green'high downto 0);
+  i_pixel_blue  <= count(i_pixel_blue'high downto 0);
+  i_pixel_dval  <= o_pixel_ready and not i_frame_sync;
 
 end architecture tb_vga_driver_rtl;
 

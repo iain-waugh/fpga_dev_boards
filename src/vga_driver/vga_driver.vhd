@@ -8,7 +8,11 @@
 -- Author(s)     : Iain Waugh
 -- File Name     : vga_driver.vhd
 --
--- VGA output driver.
+-- A VGA output driver.
+--   It has a pixel FIFO input that is 2^5 = 32 deep by default.
+--
+-- Use the CTA-861 Optimized Video Timing (OVT) Generator for values
+--   https://www.cta.tech/Resources/Standards/CTA-861-OVT-Calculator
 --
 -- Build-time features:
 --   Max X,Y resolution
@@ -33,30 +37,34 @@ entity vga_driver is
   generic(
     G_MAX_SYNC  : natural := 100;
     G_MAX_PORCH : natural := 100;
-    G_MAX_BLANK : natural := 100;
 
     G_MAX_SIZE_X : natural := 1920;
     G_MAX_SIZE_Y : natural := 1200;
 
     G_BITS_RED   : natural := 5;
     G_BITS_GREEN : natural := 6;
-    G_BITS_BLUE  : natural := 5
+    G_BITS_BLUE  : natural := 5;
+
+    G_LOG2_PIXEL_FIFO_DEPTH : natural := 5
     );
   port(
-    -- Timing control signals (data_clk domain)
-    i_h_sync_time : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
-    i_v_sync_time : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
+    pixel_clk : in std_logic;
 
-    i_h_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    -- Horizontal signals
     i_h_f_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
-    i_v_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_h_sync_time    : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
+    i_h_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+
+    -- Vertical signals
     i_v_f_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    i_v_sync_time    : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
+    i_v_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
 
-    i_h_b_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
-    i_h_f_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
-    i_v_b_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
-    i_v_f_blank_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
+    -- Un-addressable border colour
+    i_h_border_size : in unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0);
+    i_v_border_size : in unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0);
 
+    -- Addressable video
     i_h_pic_size : in unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0);
     i_v_pic_size : in unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0);
 
@@ -65,16 +73,15 @@ entity vga_driver is
     i_border_green : in unsigned(G_BITS_GREEN - 1 downto 0);
     i_border_blue  : in unsigned(G_BITS_BLUE - 1 downto 0);
 
-    -- Pixel data and handshaking signals (data_clk domain)
-    data_clk      : in  std_logic;  -- Use pixel clock for the time being (data_clk=pixel_clk)
+    -- Pixel data and handshaking signals
     o_pixel_ready : out std_logic;  -- Can only take data when 'ready' is high
+    o_p_fifo_half : out std_logic;  -- Goes high when the pixel FIFO is half empty
     i_pixel_red   : in  unsigned(G_BITS_RED - 1 downto 0);
     i_pixel_green : in  unsigned(G_BITS_GREEN - 1 downto 0);
     i_pixel_blue  : in  unsigned(G_BITS_BLUE - 1 downto 0);
     i_pixel_dval  : in  std_logic;      -- Pixel data is valid
 
-    -- VGA signals (pixel_clk domain)
-    pixel_clk    : in  std_logic;
+    -- Video signals
     i_frame_sync : in  std_logic;  -- Effectively resets the frame counters
     o_frame_sync : out std_logic;  -- Pulses high at the start of a new frame
 
@@ -92,10 +99,10 @@ end vga_driver;
 architecture vga_driver_rtl of vga_driver is
 
   -- The sequence for both horizontal and vertical is:
-  --   sync  back porch      picture      front porch
-  --  |----|------------|---------------|-------------|
+  --    front porch  sync  back porch   left/top border    picture     right/bottom border  
+  --  |-------------|----|------------|-----------------|------------|---------------------|
   --
-  type t_video_state is (sync, b_porch, b_blank, pic, f_blank, f_porch);
+  type t_video_state is (f_porch, sync, b_porch, b_border, pic, f_border);
   signal h_state    : t_video_state := sync;
   signal v_state_d1 : t_video_state := sync;
   signal h_state_d1 : t_video_state := sync;
@@ -108,13 +115,11 @@ architecture vga_driver_rtl of vga_driver is
   signal h_porch_count : unsigned(num_bits(G_MAX_PORCH) - 1 downto 0) := (others => '0');
   signal v_porch_count : unsigned(num_bits(G_MAX_PORCH) - 1 downto 0) := (others => '0');
 
-  signal h_blank_count : unsigned(num_bits(G_MAX_BLANK) - 1 downto 0) := (others => '0');
-  signal v_blank_count : unsigned(num_bits(G_MAX_BLANK) - 1 downto 0) := (others => '0');
+  signal h_border_count : unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0) := (others => '0');
+  signal v_border_count : unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
 
   signal h_pic_count : unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0) := (others => '0');
   signal v_pic_count : unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
-
-  constant C_PIXEL_FIFO_DEPTH : natural := 4;
 
   signal pixel_fifo_reset : std_logic;
   signal pixel_in_data    : std_logic_vector(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto 0);
@@ -134,31 +139,48 @@ begin  -- vga_driver_rtl
   ----------------------------------------------------------------------
   -- Assertion checks for correct input values
   -- pragma translate_off
-  assert i_h_sync_time = 0 report "Sync time cannot be zero" severity error;
-  assert i_v_sync_time = 0 report "Sync time cannot be zero" severity error;
+  process
+  begin
+    wait for 10 ns;
+    assert i_h_sync_time /= 0 report "Sync time cannot be zero" severity error;
+    assert i_v_sync_time /= 0 report "Sync time cannot be zero" severity error;
 
-  assert i_h_b_porch_time = 0 report "Porch time cannot be zero" severity error;
-  assert i_h_f_porch_time = 0 report "Porch time cannot be zero" severity error;
-  assert i_v_b_porch_time = 0 report "Porch time cannot be zero" severity error;
-  assert i_v_f_porch_time = 0 report "Porch time cannot be zero" severity error;
+    assert i_h_b_porch_time /= 0 report "HB Porch time cannot be zero" severity error;
+    assert i_h_f_porch_time /= 0 report "HF Porch time cannot be zero" severity error;
+    assert i_v_b_porch_time /= 0 report "VB Porch time cannot be zero" severity error;
+    assert i_v_f_porch_time /= 0 report "VF Porch time cannot be zero" severity error;
 
-  assert i_h_pic_size >= 640 report "Min width is 640" severity error;
-  assert i_v_pic_size >= 480 report "Min height is 480" severity error;
+    assert i_h_border_size + i_h_pic_size >= 640
+      report "Min width (including border) is 640" &
+      "; you have " & integer'image(to_integer(i_h_border_size + i_h_pic_size)) severity warning;
+    assert i_v_border_size + i_v_pic_size >= 480
+      report "Min height (including border) is 480" &
+      "; you have " & integer'image(to_integer(i_v_border_size + i_v_pic_size)) severity warning;
+
+    assert i_h_border_size + i_h_pic_size < G_MAX_SIZE_X + 1
+      report "Max width (including border) is " & integer'image(G_MAX_SIZE_X) &
+      "; you have " & integer'image(to_integer(i_h_border_size + i_h_pic_size)) severity warning;
+    assert i_v_border_size + i_v_pic_size < G_MAX_SIZE_Y + 1
+      report "Max height (including border) is " & integer'image(G_MAX_SIZE_Y) &
+      "; you have " & integer'image(to_integer(i_v_border_size + i_v_pic_size)) severity warning;
+    wait;
+  end process;
   -- pragma translate_on
+
 
   ----------------------------------------------------------------------
   -- Horizontal state machine
   process (pixel_clk)
   begin
-    if (rising_edge(pixel_clk)) then
-      if (i_frame_sync = '1') then
+    if rising_edge(pixel_clk) then
+      if i_frame_sync = '1' then
         h_sync_count <= (others => '0');
         h_state      <= sync;
         h_state_d1   <= sync;
       else
         case h_state is
           when sync =>
-            if (h_sync_count < i_h_sync_time) then
+            if h_sync_count < i_h_sync_time then
               h_sync_count <= h_sync_count + 1;
             else
               h_porch_count <= (others => '0');
@@ -166,51 +188,51 @@ begin  -- vga_driver_rtl
             end if;
 
           when b_porch =>
-            if (h_porch_count < i_h_b_porch_time) then
+            if h_porch_count < i_h_b_porch_time then
               h_porch_count <= h_porch_count + 1;
             else
               -- Only go to the blank state if it's non-zero time
-              if (i_h_b_blank_time /= 0) then
-                h_blank_count <= (others => '0');
-                h_state       <= b_blank;
+              if i_h_border_size /= 0 then
+                h_border_count <= (others => '0');
+                h_state        <= b_border;
               else
                 h_pic_count <= (others => '0');
                 h_state     <= pic;
               end if;
             end if;
 
-          when b_blank =>
-            if (h_blank_count < i_h_b_blank_time) then
-              h_blank_count <= h_blank_count + 1;
+          when b_border =>
+            if h_border_count < i_h_border_size(i_h_border_size'high - 1 downto 1) then
+              -- Count up half-way
+              h_border_count <= h_border_count + 1;
             else
               h_pic_count <= (others => '0');
               h_state     <= pic;
             end if;
 
           when pic =>
-            if (h_pic_count < i_h_pic_size) then
+            if h_pic_count < i_h_pic_size then
               h_pic_count <= h_pic_count + 1;
             else
               -- Only go to the blank state if it's non-zero time
-              if (i_h_f_blank_time /= 0) then
-                h_blank_count <= (others => '0');
-                h_state       <= f_blank;
+              if i_h_border_size /= 0 then
+                h_state        <= f_border;
               else
                 h_porch_count <= (others => '0');
                 h_state       <= f_porch;
               end if;
             end if;
 
-          when f_blank =>
-            if (h_blank_count < i_h_f_blank_time) then
-              h_blank_count <= h_blank_count + 1;
+          when f_border =>
+            if h_border_count < i_h_border_size then
+              h_border_count <= h_border_count + 1;
             else
               h_porch_count <= (others => '0');
               h_state       <= f_porch;
             end if;
 
           when others =>                -- 'f_porch' state
-            if (h_porch_count < i_h_f_porch_time) then
+            if h_porch_count < i_h_f_porch_time then
               h_porch_count <= h_porch_count + 1;
             else
               h_sync_count <= (others => '0');
@@ -228,8 +250,8 @@ begin  -- vga_driver_rtl
   -- Vertical state machine
   process (pixel_clk)
   begin
-    if (rising_edge(pixel_clk)) then
-      if (i_frame_sync = '1') then
+    if rising_edge(pixel_clk) then
+      if i_frame_sync = '1' then
         v_sync_count <= (others => '0');
         v_state_d1   <= sync;
 
@@ -240,10 +262,10 @@ begin  -- vga_driver_rtl
 
         -- Only tick the vertical state machine around when the
         -- horizontal state goes from 'front porch' to 'sync'
-        if (h_state_d1 = f_porch and h_state = sync) then
+        if h_state_d1 = f_porch and h_state = sync then
           case v_state_d1 is
             when sync =>
-              if (v_sync_count < i_v_sync_time) then
+              if v_sync_count < i_v_sync_time then
                 v_sync_count <= v_sync_count + 1;
               else
                 v_porch_count <= (others => '0');
@@ -251,51 +273,51 @@ begin  -- vga_driver_rtl
               end if;
 
             when b_porch =>
-              if (v_porch_count < i_v_b_porch_time) then
+              if v_porch_count < i_v_b_porch_time then
                 v_porch_count <= v_porch_count + 1;
               else
                 -- Only go to the blank state if it's non-zero time
-                if (i_v_b_blank_time /= 0) then
-                  v_blank_count <= (others => '0');
-                  v_state_d1    <= b_blank;
+                if i_v_border_size /= 0 then
+                  v_border_count <= (others => '0');
+                  v_state_d1     <= b_border;
                 else
                   v_pic_count <= (others => '0');
                   v_state_d1  <= pic;
                 end if;
               end if;
 
-            when b_blank =>
-              if (v_blank_count < i_v_b_blank_time) then
-                v_blank_count <= v_blank_count + 1;
+            when b_border =>
+              if v_border_count < i_v_border_size(i_v_border_size'high - 1 downto 1) then
+                -- Count up half-way
+                v_border_count <= v_border_count + 1;
               else
                 v_pic_count <= (others => '0');
                 v_state_d1  <= pic;
               end if;
 
             when pic =>
-              if (v_pic_count < i_v_pic_size) then
+              if v_pic_count < i_v_pic_size then
                 v_pic_count <= v_pic_count + 1;
               else
                 -- Only go to the blank state if it's non-zero time
-                if (i_v_f_blank_time /= 0) then
-                  v_blank_count <= (others => '0');
-                  v_state_d1    <= f_blank;
+                if i_v_border_size /= 0 then
+                  v_state_d1     <= f_border;
                 else
                   v_porch_count <= (others => '0');
                   v_state_d1    <= f_porch;
                 end if;
               end if;
 
-            when f_blank =>
-              if (v_blank_count < i_v_f_blank_time) then
-                v_blank_count <= v_blank_count + 1;
+            when f_border =>
+              if v_border_count < i_v_border_size then
+                v_border_count <= v_border_count + 1;
               else
                 v_porch_count <= (others => '0');
                 v_state_d1    <= f_porch;
               end if;
 
             when others =>              -- 'f_porch' state
-              if (v_porch_count < i_v_f_porch_time) then
+              if v_porch_count < i_v_f_porch_time then
                 v_porch_count <= v_porch_count + 1;
               else
                 v_sync_count <= (others => '0');
@@ -315,14 +337,14 @@ begin  -- vga_driver_rtl
   -- Generate strobes
   process (pixel_clk)
   begin
-    if (rising_edge(pixel_clk)) then
-      if (h_state_d1 = sync) then
+    if rising_edge(pixel_clk) then
+      if h_state_d1 = sync then
         o_vga_hs <= '1';
       else
         o_vga_hs <= '0';
       end if;
 
-      if (v_state_d1 = sync) then
+      if v_state_d1 = sync then
         o_vga_vs <= '1';
       else
         o_vga_vs <= '0';
@@ -343,14 +365,14 @@ begin  -- vga_driver_rtl
   pic_valid_d1 <= '1' when h_state_d1 = pic and v_state_d1 = pic
                   else '0';
 
-  blank_valid_d1 <= '1' when h_state_d1 = b_blank or h_state_d1 = f_blank or
-                    v_state_d1 = b_blank or v_state_d1 = f_blank
+  blank_valid_d1 <= '1' when h_state_d1 = b_border or h_state_d1 = f_border or
+                    v_state_d1 = b_border or v_state_d1 = f_border
                     else '0';
 
   pixel_fifo : entity work.fifo_sync
     generic map (
       G_DATA_WIDTH => G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE,
-      G_LOG2_DEPTH => C_PIXEL_FIFO_DEPTH,
+      G_LOG2_DEPTH => G_LOG2_PIXEL_FIFO_DEPTH,
 
       G_REGISTER_OUT => true,
 
@@ -381,10 +403,10 @@ begin  -- vga_driver_rtl
 
   ----------------------------------------------------------------------
   -- Register the outputs and hold the RGB output low when we're not
-  -- within the display area
+  -- within the addressable display area
   process (pixel_clk)
   begin
-    if (rising_edge(pixel_clk)) then
+    if rising_edge(pixel_clk) then
       pic_valid_d2   <= pic_valid_d1;
       blank_valid_d2 <= blank_valid_d1;
     end if;
@@ -392,14 +414,14 @@ begin  -- vga_driver_rtl
 
   process (pixel_clk)
   begin
-    if (rising_edge(pixel_clk)) then
+    if rising_edge(pixel_clk) then
       o_frame_sync <= frame_start;
 
-      if (pic_valid_d2 = '1') then
+      if pic_valid_d2 = '1' then
         o_vga_red   <= unsigned(pixel_out_data(G_BITS_RED + G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_GREEN + G_BITS_BLUE));
         o_vga_green <= unsigned(pixel_out_data(G_BITS_GREEN + G_BITS_BLUE - 1 downto G_BITS_BLUE));
         o_vga_blue  <= unsigned(pixel_out_data(G_BITS_BLUE - 1 downto 0));
-      elsif (blank_valid_d2 = '1') then
+      elsif blank_valid_d2 = '1' then
         o_vga_red   <= i_border_red;
         o_vga_green <= i_border_green;
         o_vga_blue  <= i_border_blue;
