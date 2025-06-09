@@ -40,6 +40,9 @@ entity fifo_sync is
     -- Leave this as "true" unless you have to have low latency
     G_REGISTER_OUT : boolean := true;
 
+    -- If 'true' o_xx_error is only cleared on a reset, if 'false' auto-clear on the next cycle
+    G_LATCH_ERRORS : boolean := true;
+
     -- RAM styles:
     -- Xilinx: "block", "distributed", "registers" or "uram"
     -- Altera: "logic", "M512", "M4K", "M9K", "M20K", "M144K", "MLAB", or "M-RAM"
@@ -63,7 +66,7 @@ entity fifo_sync is
     o_empty        : out std_logic;
     o_almost_empty : out std_logic;
 
-    -- Error flags - stays high until reset
+    -- Error flags - stays high until reset (depending on G_LATCH_ERRORS)
     o_wr_error : out std_logic;         -- High if you write when 'full' = '1'
     o_rd_error : out std_logic;         -- High if you read when 'empty' = '1'
 
@@ -167,6 +170,11 @@ begin  -- fifo_sync_rtl
   set_flags : process (clk)
   begin
     if rising_edge(clk) then
+      if G_LATCH_ERRORS = false then
+        rd_error <= '0';
+        wr_error <= '0';
+      end if;
+
       if rst = '1' then
         empty    <= '1';
         full     <= '0';
