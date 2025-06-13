@@ -29,8 +29,8 @@ package util_pkg is
   function swap_byte(slv : std_logic_vector) return std_logic_vector;
 
   -- Numerical transforms
-  function bin_to_gray(slv : std_logic_vector) return std_logic_vector;
-  function gray_to_bin(slv : std_logic_vector) return std_logic_vector;
+  function bin_to_gray(slv : unsigned) return std_logic_vector;
+  function gray_to_bin(slv : std_logic_vector) return unsigned;
 
   -- Misc functions
   function all_ones(x  : natural) return std_logic_vector;
@@ -103,18 +103,18 @@ package body util_pkg is
   -------------------------------------------------------------------------
   -- Numerical transforms
   -------------------------------------------------------------------------
-  function bin_to_gray(slv : std_logic_vector) return std_logic_vector is
+  function bin_to_gray(slv : unsigned) return std_logic_vector is
     variable v_slv : std_logic_vector(slv'range) := (others => '0');
   begin
-    v_slv := slv;
+    v_slv := std_logic_vector(slv);
     v_slv := v_slv xor '0' & v_slv(v_slv'high downto v_slv'low+1);
     return v_slv;
   end bin_to_gray;
 
-  function gray_to_bin(slv : std_logic_vector) return std_logic_vector is
-    variable v_slv : std_logic_vector(slv'range) := (others => '0');
+  function gray_to_bin(slv : std_logic_vector) return unsigned is
+    variable v_slv : unsigned(slv'range) := (others => '0');
   begin
-    v_slv := slv;
+    v_slv := unsigned(slv);
     for i in v_slv'high - 1 downto 0 loop
       v_slv(i) := v_slv(i+1) xor v_slv(i);
     end loop;
