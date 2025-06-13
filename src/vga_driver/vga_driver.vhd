@@ -216,7 +216,7 @@ begin  -- vga_driver_rtl
             else
               -- Only go to the blank state if it's non-zero time
               if i_h_border_size /= 0 then
-                h_state        <= f_border;
+                h_state <= f_border;
               else
                 h_porch_count <= (others => '0');
                 h_state       <= f_porch;
@@ -301,7 +301,7 @@ begin  -- vga_driver_rtl
               else
                 -- Only go to the blank state if it's non-zero time
                 if i_v_border_size /= 0 then
-                  v_state_d1     <= f_border;
+                  v_state_d1 <= f_border;
                 else
                   v_porch_count <= (others => '0');
                   v_state_d1    <= f_porch;
@@ -366,22 +366,22 @@ begin  -- vga_driver_rtl
       rst => pixel_fifo_reset,
 
       -- Write ports
-      i_data        => pixel_in_data,
-      i_wr_en       => i_pixel_dval,
-      o_almost_full => open,
-      o_full        => pixel_fifo_full,
-      o_wr_error    => wr_error,
+      i_wr_data        => pixel_in_data,
+      i_wr_en          => i_pixel_dval,
+      o_wr_almost_full => open,
+      o_wr_full        => pixel_fifo_full,
+      o_wr_error       => wr_error,
 
       -- Read ports
-      o_almost_empty => o_p_fifo_half,
-      o_empty        => pixel_fifo_empty,
-      i_rd_en        => pic_valid_d1,
-      o_data         => pixel_out_data,
+      o_rd_almost_empty => o_p_fifo_half,
+      o_rd_empty        => pixel_fifo_empty,
+      i_rd_en           => pic_valid_d1,
+      o_rd_data         => pixel_out_data,
       o_rd_error     => rd_error,
 
       -- Set fill level ports to be half-full/empty
-      i_dist_from_full  => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1)),
-      i_dist_from_empty => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1))
+      i_wr_full_limit  => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1)),
+      i_rd_empty_limit => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1))
       );
 
   ----------------------------------------------------------------------

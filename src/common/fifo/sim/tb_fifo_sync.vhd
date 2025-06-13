@@ -46,22 +46,22 @@ architecture tb_fifo_sync_rtl of tb_fifo_sync is
 
   -- How far away from "full" or "empty"
   --   should the "almost full" and "almost empty" be?
-  signal i_dist_from_full  : unsigned(G_LOG2_DEPTH - 1 downto 0);
-  signal i_dist_from_empty : unsigned(G_LOG2_DEPTH - 1 downto 0);
+  signal i_wr_full_limit  : unsigned(G_LOG2_DEPTH - 1 downto 0);
+  signal i_rd_empty_limit : unsigned(G_LOG2_DEPTH - 1 downto 0);
 
   -- Write ports
-  signal i_data        : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
-  signal i_wr_en       : std_logic                                   := '0';
-  signal o_almost_full : std_logic;
-  signal o_full        : std_logic;
-  signal o_wr_error    : std_logic;
+  signal i_wr_data        : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
+  signal i_wr_en          : std_logic                                   := '0';
+  signal o_wr_almost_full : std_logic;
+  signal o_wr_full        : std_logic;
+  signal o_wr_error       : std_logic;
 
   -- Read ports
-  signal o_almost_empty : std_logic;
-  signal o_empty        : std_logic;
-  signal i_rd_en        : std_logic := '0';
-  signal o_data         : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
-  signal o_rd_error     : std_logic;
+  signal o_rd_almost_empty : std_logic;
+  signal o_rd_empty        : std_logic;
+  signal i_rd_en           : std_logic := '0';
+  signal o_rd_data         : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+  signal o_rd_error        : std_logic;
 
   -- Self-checking signals
   signal first_result : std_logic                           := '0';
@@ -95,22 +95,22 @@ begin  -- architecture tb_fifo_sync_rtl
 
       -- How far away from "full" or "empty"
       --   should the "almost full" and "almost empty" be?
-      i_dist_from_full  => i_dist_from_full,
-      i_dist_from_empty => i_dist_from_empty,
+      i_wr_full_limit  => i_wr_full_limit,
+      i_rd_empty_limit => i_rd_empty_limit,
 
       -- Write ports
-      i_data        => i_data,
-      i_wr_en       => i_wr_en,
-      o_almost_full => o_almost_full,
-      o_full        => o_full,
-      o_wr_error    => o_wr_error,
+      i_wr_data        => i_wr_data,
+      i_wr_en          => i_wr_en,
+      o_wr_almost_full => o_wr_almost_full,
+      o_wr_full        => o_wr_full,
+      o_wr_error       => o_wr_error,
 
       -- Read ports
-      o_almost_empty => o_almost_empty,
-      o_empty        => o_empty,
-      i_rd_en        => i_rd_en,
-      o_data         => o_data,
-      o_rd_error     => o_rd_error,
+      o_rd_almost_empty => o_rd_almost_empty,
+      o_rd_empty        => o_rd_empty,
+      i_rd_en           => i_rd_en,
+      o_rd_data         => o_rd_data,
+      o_rd_error        => o_rd_error,
 
       i_debug_dump => i_debug_dump);
 
@@ -159,7 +159,7 @@ begin  -- architecture tb_fifo_sync_rtl
     begin
       i_rd_en   <= '1';
       wait_falling_clk(1);
-      v_rd_data := o_data;
+      v_rd_data := o_rd_data;
       if v_rd_data /= expected and check = true then
         report "FIFO read did not match the expected data." severity error;
         test_failed <= true;
@@ -176,12 +176,12 @@ begin  -- architecture tb_fifo_sync_rtl
       consecutive : in boolean := false
       ) is
     begin
-      i_wr_en <= '1';
-      i_data  <= data;
+      i_wr_en   <= '1';
+      i_wr_data <= data;
       wait_falling_clk(1);
       if not consecutive then
-        i_wr_en <= '0';
-        i_data  <= (others => 'X');
+        i_wr_en   <= '0';
+        i_wr_data <= (others => 'X');
         wait_falling_clk(1);
       end if;
     end procedure;
@@ -196,18 +196,18 @@ begin  -- architecture tb_fifo_sync_rtl
       variable v_rd_data : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
     begin
       i_wr_en   <= '1';
-      i_data    <= data;
+      i_wr_data <= data;
       i_rd_en   <= '1';
       wait_falling_clk(1);
-      v_rd_data := o_data;
+      v_rd_data := o_rd_data;
       if v_rd_data /= expected and check = true then
         report "FIFO read did not match the expected data." severity error;
         test_failed <= true;
       end if;
       if not consecutive then
-        i_rd_en <= '0';
-        i_wr_en <= '0';
-        i_data  <= (others => 'X');
+        i_rd_en   <= '0';
+        i_wr_en   <= '0';
+        i_wr_data <= (others => 'X');
         wait_falling_clk(1);
       end if;
     end procedure;
@@ -220,31 +220,31 @@ begin  -- architecture tb_fifo_sync_rtl
       almost_full  : in std_logic := '0'
       ) is
     begin
-      if o_empty /= empty then
-        report "Unexpected value for o_empty:" &
+      if o_rd_empty /= empty then
+        report "Unexpected value for o_rd_empty:" &
           " Expected " & std_logic'image(empty) &
-          " got " & std_logic'image(o_empty) severity error;
+          " got " & std_logic'image(o_rd_empty) severity error;
         test_failed <= true;
       end if;
 
-      if o_full /= full then
-        report "Unexpected value for o_full:" &
+      if o_wr_full /= full then
+        report "Unexpected value for o_wr_full:" &
           " Expected " & std_logic'image(full) &
-          " got " & std_logic'image(o_full) severity error;
+          " got " & std_logic'image(o_wr_full) severity error;
         test_failed <= true;
       end if;
 
-      if o_almost_empty /= almost_empty then
-        report "Unexpected value for o_almost_empty:" &
+      if o_rd_almost_empty /= almost_empty then
+        report "Unexpected value for o_rd_almost_empty:" &
           " Expected " & std_logic'image(almost_empty) &
-          " got " & std_logic'image(o_almost_empty) severity error;
+          " got " & std_logic'image(o_rd_almost_empty) severity error;
         test_failed <= true;
       end if;
 
-      if o_almost_full /= almost_full then
-        report "Unexpected value for o_almost_full:" &
+      if o_wr_almost_full /= almost_full then
+        report "Unexpected value for o_wr_almost_full:" &
           " Expected " & std_logic'image(almost_full) &
-          " got " & std_logic'image(o_almost_full) severity error;
+          " got " & std_logic'image(o_wr_almost_full) severity error;
         test_failed <= true;
       end if;
 
@@ -276,8 +276,8 @@ begin  -- architecture tb_fifo_sync_rtl
     -- Test sequence
 
     -- Set the almost full/empty distanec to 1.
-    i_dist_from_full  <= to_unsigned(1, G_LOG2_DEPTH);
-    i_dist_from_empty <= to_unsigned(1, G_LOG2_DEPTH);
+    i_wr_full_limit  <= to_unsigned(1, G_LOG2_DEPTH);
+    i_rd_empty_limit <= to_unsigned(1, G_LOG2_DEPTH);
 
     report "Apply the reset then check flags after it's de-asserted" severity note;
     rst <= '1';
@@ -288,17 +288,17 @@ begin  -- architecture tb_fifo_sync_rtl
     wait_falling_clk(1);
 
     report "Write 1st word and check flags." severity note;
-    fifo_wr(data => X"12");
+    fifo_wr(data          => X"12");
     check_flags(empty     => '0', almost_empty => '1', almost_full => '0', full => '0');
     check_errors(rd_error => '0', wr_error => '0');
 
     report "Read back the 1st word and check flags." severity note;
-    fifo_rd(expected => X"12");
+    fifo_rd(expected      => X"12");
     check_flags(empty     => '1', almost_empty => '1', almost_full => '0', full => '0');
     check_errors(rd_error => '0', wr_error => '0');
 
     report "Read an extra word to generate an error." severity note;
-    fifo_rd(expected => X"12", check  => false);
+    fifo_rd(expected      => X"12", check => false);
     check_flags(empty     => '1', almost_empty => '1', almost_full => '0', full => '0');
     check_errors(rd_error => '1', wr_error => '0');
 
@@ -311,13 +311,13 @@ begin  -- architecture tb_fifo_sync_rtl
     wait_falling_clk(1);
 
     report "Write 2 words and check flags." severity note;
-    fifo_wr(data => X"34", consecutive => true);
-    fifo_wr(data => X"56");
-    check_flags(empty          => '0', almost_empty => '0', almost_full => '0', full => '0');
-    check_errors(rd_error      => '0', wr_error => '0');
+    fifo_wr(data          => X"34", consecutive => true);
+    fifo_wr(data          => X"56");
+    check_flags(empty     => '0', almost_empty => '0', almost_full => '0', full => '0');
+    check_errors(rd_error => '0', wr_error => '0');
 
     report "Change distance from empty and re-test flags." severity note;
-    i_dist_from_empty <= to_unsigned(2, G_LOG2_DEPTH);
+    i_rd_empty_limit <= to_unsigned(2, G_LOG2_DEPTH);
     wait_falling_clk(1);
     check_flags(empty     => '0', almost_empty => '1', almost_full => '0', full => '0');
     check_errors(rd_error => '0', wr_error => '0');
@@ -327,13 +327,13 @@ begin  -- architecture tb_fifo_sync_rtl
     fifo_wr(data => X"9A", consecutive => true);
     fifo_wr(data => X"BC");
 
-    fifo_rd(expected => X"34", consecutive => true);
-    fifo_rd(expected => X"56");
-    check_flags(empty          => '0', almost_empty => '0', almost_full => '0', full => '0');
-    check_errors(rd_error      => '0', wr_error => '0');
+    fifo_rd(expected      => X"34", consecutive => true);
+    fifo_rd(expected      => X"56");
+    check_flags(empty     => '0', almost_empty => '0', almost_full => '0', full => '0');
+    check_errors(rd_error => '0', wr_error => '0');
 
     report "Change distance from empty and re-test flags." severity note;
-    i_dist_from_empty <= to_unsigned(3, G_LOG2_DEPTH);
+    i_rd_empty_limit <= to_unsigned(3, G_LOG2_DEPTH);
     wait_falling_clk(1);
     check_flags(empty     => '0', almost_empty => '1', almost_full => '0', full => '0');
     check_errors(rd_error => '0', wr_error => '0');
@@ -345,20 +345,20 @@ begin  -- architecture tb_fifo_sync_rtl
     wait_falling_clk(1);
 
     report "Write words until almost full and check flags." severity note;
-    fifo_wr(data => X"DE", consecutive => true);
-    fifo_wr(data => X"F0");
-    check_flags(empty          => '0', almost_empty => '0', almost_full => '0', full => '0');
-    fifo_wr(data => X"11");
-    check_flags(empty          => '0', almost_empty => '0', almost_full => '1', full => '0');
-    check_errors(rd_error      => '0', wr_error => '0');
+    fifo_wr(data          => X"DE", consecutive => true);
+    fifo_wr(data          => X"F0");
+    check_flags(empty     => '0', almost_empty => '0', almost_full => '0', full => '0');
+    fifo_wr(data          => X"11");
+    check_flags(empty     => '0', almost_empty => '0', almost_full => '1', full => '0');
+    check_errors(rd_error => '0', wr_error => '0');
 
     report "Write another word to become full and check flags." severity note;
-    fifo_wr(data => X"22");
+    fifo_wr(data          => X"22");
     check_flags(empty     => '0', almost_empty => '0', almost_full => '1', full => '1');
     check_errors(rd_error => '0', wr_error => '0');
 
     report "Write another word while full and check error flags." severity note;
-    fifo_wr(data => X"33");
+    fifo_wr(data          => X"33");
     check_flags(empty     => '0', almost_empty => '0', almost_full => '1', full => '1');
     check_errors(rd_error => '0', wr_error => '1');
 
@@ -377,15 +377,15 @@ begin  -- architecture tb_fifo_sync_rtl
     wait_falling_clk(1);
 
     report "Fill the FIFO and check all values are read correctly." severity note;
-    fifo_wr(data => X"F1", consecutive => true);
-    fifo_wr(data => X"F2", consecutive => true);
-    fifo_wr(data => X"F3", consecutive => true);
-    fifo_wr(data => X"F4", consecutive => true);
-    fifo_wr(data => X"F5", consecutive => true);
-    fifo_wr(data => X"F6", consecutive => true);
-    fifo_wr(data => X"F7");
-    check_flags(empty          => '0', almost_empty => '0', almost_full => '1', full => '1');
-    check_errors(rd_error      => '0', wr_error => '0');
+    fifo_wr(data          => X"F1", consecutive => true);
+    fifo_wr(data          => X"F2", consecutive => true);
+    fifo_wr(data          => X"F3", consecutive => true);
+    fifo_wr(data          => X"F4", consecutive => true);
+    fifo_wr(data          => X"F5", consecutive => true);
+    fifo_wr(data          => X"F6", consecutive => true);
+    fifo_wr(data          => X"F7");
+    check_flags(empty     => '0', almost_empty => '0', almost_full => '1', full => '1');
+    check_errors(rd_error => '0', wr_error => '0');
 
     fifo_rd(expected => X"F1", consecutive => true);
     fifo_rd(expected => X"F2", consecutive => true);
@@ -393,7 +393,7 @@ begin  -- architecture tb_fifo_sync_rtl
     fifo_rd(expected => X"F4", consecutive => true);
     fifo_rd(expected => X"F5", consecutive => true);
     fifo_rd(expected => X"F6", consecutive => true);
-    fifo_rw(data => X"F8", expected => X"F7");
+    fifo_rw(data     => X"F8", expected => X"F7");
 
     report "End of tests." severity note;
     if test_failed then

@@ -55,25 +55,23 @@ entity fifo_sync is
     rst : in std_logic;
 
     -- Write ports
-    i_wr_en       : in  std_logic;
-    i_data        : in  std_logic_vector(G_DATA_WIDTH - 1 downto 0);
-    o_full        : out std_logic;
-    o_almost_full : out std_logic;
+    i_wr_en          : in  std_logic;
+    i_wr_data        : in  std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+    o_wr_almost_full : out std_logic;
+    o_wr_full        : out std_logic;
+    o_wr_error       : out std_logic;  -- High if you write when 'o_wr_full' = '1'
 
     -- Read ports
-    i_rd_en        : in  std_logic;
-    o_data         : out std_logic_vector(G_DATA_WIDTH - 1 downto 0);
-    o_empty        : out std_logic;
-    o_almost_empty : out std_logic;
-
-    -- Error flags - stays high until reset (depending on G_LATCH_ERRORS)
-    o_wr_error : out std_logic;         -- High if you write when 'full' = '1'
-    o_rd_error : out std_logic;         -- High if you read when 'empty' = '1'
+    i_rd_en           : in  std_logic;
+    o_rd_data         : out std_logic_vector(G_DATA_WIDTH - 1 downto 0);
+    o_rd_almost_empty : out std_logic;
+    o_rd_empty        : out std_logic;
+    o_rd_error        : out std_logic;  -- High if you read when 'o_rd_empty' = '1'
 
     -- How far away from "full" or "empty"
     --   should the "almost full" and "almost empty" be?
-    i_dist_from_full  : in unsigned(G_LOG2_DEPTH - 1 downto 0) := to_unsigned(1, G_LOG2_DEPTH);
-    i_dist_from_empty : in unsigned(G_LOG2_DEPTH - 1 downto 0) := to_unsigned(1, G_LOG2_DEPTH);
+    i_wr_full_limit  : in unsigned(G_LOG2_DEPTH - 1 downto 0) := to_unsigned(1, G_LOG2_DEPTH);
+    i_rd_empty_limit : in unsigned(G_LOG2_DEPTH - 1 downto 0) := to_unsigned(1, G_LOG2_DEPTH);
 
     -- Optional simulation debug signal
     -- Setting this to '1' will report the max fill level to the console
@@ -94,10 +92,10 @@ architecture fifo_sync_rtl of fifo_sync is
   attribute syn_ramstyle        : string;
   attribute syn_ramstyle of ram : signal is G_RAM_STYLE;
 
-  signal data     : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
+  signal data : std_logic_vector(G_DATA_WIDTH - 1 downto 0) := (others => '0');
 
-  signal wr_count   : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
-  signal rd_count   : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
+  signal wr_ptr     : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
+  signal rd_ptr     : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
   signal fill_count : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '0');
 
   constant C_MAX_FILL : unsigned(G_LOG2_DEPTH - 1 downto 0) := (others => '1');
@@ -118,14 +116,14 @@ begin  -- fifo_sync_rtl
   begin
     if rising_edge(clk) then
       if i_wr_en = '1' then
-        ram(to_integer(wr_count)) <= i_data;
+        ram(to_integer(wr_ptr)) <= i_wr_data;
       end if;
     end if;
   end process u_ram_wr;
   u_ram_rd : process (clk)
   begin
     if rising_edge(clk) then
-      data <= ram(to_integer(rd_count));
+      data <= ram(to_integer(rd_ptr));
     end if;
   end process u_ram_rd;
 
@@ -135,14 +133,14 @@ begin  -- fifo_sync_rtl
   begin
     if rising_edge(clk) then
       if rst = '1' then
-        wr_count <= (others => '0');
-        rd_count <= (others => '0');
+        wr_ptr <= (others => '0');
+        rd_ptr <= (others => '0');
       else
         if i_rd_en = '1' then
-          rd_count <= rd_count + 1;
+          rd_ptr <= rd_ptr + 1;
         end if;
         if i_wr_en = '1' then
-          wr_count <= wr_count + 1;
+          wr_ptr <= wr_ptr + 1;
         end if;
       end if;
     end if;
@@ -213,44 +211,44 @@ begin  -- fifo_sync_rtl
   -- Combinatorial because it needs to happen right away.
   -- It's either combinatorial, or it's a bunch of extra logic to precalculate,
   --   then check.
-  set_almost_flags : process (fill_count, i_dist_from_empty, i_dist_from_full)
+  set_almost_flags : process (fill_count, i_rd_empty_limit, i_wr_full_limit)
   begin
     -- The flags can only change if read/write are different
-    if fill_count > i_dist_from_empty then
+    if fill_count > i_rd_empty_limit then
       almost_empty <= '0';
     else
       almost_empty <= '1';
     end if;
 
-    if fill_count >= (C_MAX_FILL - i_dist_from_full) then
+    if fill_count >= (C_MAX_FILL - i_wr_full_limit) then
       almost_full <= '1';
     else
       almost_full <= '0';
     end if;
   end process set_almost_flags;
-  o_almost_full  <= almost_full;
-  o_almost_empty <= almost_empty;
+  o_wr_almost_full  <= almost_full;
+  o_rd_almost_empty <= almost_empty;
 
   ----------------------------------------------------------------------
   -- Either register the outputs or pass them straight through.
   -- Logic runs faster when registered, but there's a 1-cycle penalty.
   out_not_registered : if G_REGISTER_OUT = false generate
-    o_data <= data;
+    o_rd_data <= data;
   end generate out_not_registered;
 
   out_registered : if G_REGISTER_OUT = true generate
     u_reg_out : process (clk)
     begin
       if rising_edge(clk) then
-        o_data <= data;
+        o_rd_data <= data;
       end if;
     end process u_reg_out;
   end generate out_registered;
 
   -- Connect the signal flags to output pins
-  o_full     <= full;
+  o_wr_full  <= full;
   o_wr_error <= wr_error;
-  o_empty    <= empty;
+  o_rd_empty <= empty;
   o_rd_error <= rd_error;
 
   ----------------------------------------------------------------------
