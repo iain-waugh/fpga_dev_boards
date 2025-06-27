@@ -29,6 +29,11 @@ set_property target_language VHDL [ current_project ]
 
 # Supporting file
 read_vhdl "../../src/common/pkg/util_pkg.vhd"
+read_vhdl "../../src/common/delay_sl/delay_sl.vhd"
+read_vhdl "../../src/common/sync_sl/sync_sl.vhd"
+read_vhdl "../../src/common/pulse_gen/pulse_gen.vhd"
+read_vhdl "../../src/common/clk_gen/clk_gen_z7.vhd"
+read_vhdl "../../src/hello_world/hello_world.vhd"
 
 # Main file
 read_vhdl "../../src/${PROJECT}.vhd"
@@ -39,8 +44,8 @@ read_vhdl "../../src/${PROJECT}.vhd"
 #   UG834 v2018.3, page 1148
 #   Options used are:
 #     (none)
-read_xdc ${PART}.xdc
-# read_xdc ${PART}_timing.xdc
+read_xdc ${PART}_pins.xdc
+read_xdc ${PART}_timing.xdc
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
