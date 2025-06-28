@@ -1,2 +1,4 @@
 .Xil/
 a7_lite_board/
+clockInfo.txt
+a7_lite_board.bit

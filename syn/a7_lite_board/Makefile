@@ -2,8 +2,8 @@ PROJECT ?= a7_lite_board
 DEVICE  ?= xc7a35tfgg484-1
 OUT_DIR  = ${PROJECT}/${DEVICE}
 
-SYNTH_NAME = artix_synth
-ROUTE_NAME = artix_route
+SYNTH_NAME = ${PROJECT}_synth
+ROUTE_NAME = ${PROJECT}_route
 
 # =========================================================================
 # Xilinx Vivado build flags are in the respective '.tcl' files
