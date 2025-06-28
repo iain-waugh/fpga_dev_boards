@@ -59,8 +59,7 @@ check_timing -file ${OUT_DIR}/${ROUTE_DCP}_timing.txt
 #   Options used are:
 #     -file : Filename to output results to.
 report_utilization -file ${OUT_DIR}/${ROUTE_DCP}_util.txt
-report_utilization -hierarchical -file ${OUT_DIR}/${ROUTE_DCP}_hier_util.txt
-foreach {i} [ get_cells ] { report_utilization -cells $i -file ${OUT_DIR}/cell_${i}_util.txt }
+report_utilization -hierarchical -hierarchical_depth 3 -file ${OUT_DIR}/${ROUTE_DCP}_hier_util.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Write a checkpoint of the current design.

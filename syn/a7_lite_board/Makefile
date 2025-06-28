@@ -1,6 +1,6 @@
 PROJECT ?= a7_lite_board
-PART    ?= xc7a35tfgg484-1
-OUT_DIR  = ${PROJECT}/${PART}
+DEVICE  ?= xc7a35tfgg484-1
+OUT_DIR  = ${PROJECT}/${DEVICE}
 
 SYNTH_NAME = artix_synth
 ROUTE_NAME = artix_route
@@ -35,15 +35,15 @@ clean:
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 00b - Preprocess the environment to be sure files are in place
-${PART}.xdc:
-	touch ${PART}.xdc
+${DEVICE}.xdc:
+	touch ${DEVICE}.xdc
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 01 - Synthesis
 .PHONY: synth
 synth: ${OUT_DIR}/${SYNTH_NAME}.dcp
-${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${PART}.xdc
+${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${DEVICE}.xdc
 
 # Invoke the synthesis script
 	@echo
@@ -53,7 +53,7 @@ ${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${PART
 	mkdir -p ${OUT_DIR}
 	vivado -mode batch -source ${SYNTH_NAME}.tcl \
 		-log ${OUT_DIR}/${SYNTH_NAME}.log -journal ${OUT_DIR}/${SYNTH_NAME}.jou \
-		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${PART} ${PROJECT}
+		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${DEVICE} ${PROJECT}
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -71,6 +71,6 @@ ${OUT_DIR}/${ROUTE_NAME}.dcp : ${OUT_DIR}/${SYNTH_NAME}.dcp ${ROUTE_NAME}.tcl
 		-log ${OUT_DIR}/${ROUTE_NAME}.log -journal ${OUT_DIR}/${ROUTE_NAME}.jou \
 		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${ROUTE_NAME} ${PROJECT}
 
-# The route TCL file generates file of PART usage per cell
+# The route TCL file generates file of part usage per cell
 # Parse them into something simpler
 #	python parse_usage.py ${OUT_DIR}
