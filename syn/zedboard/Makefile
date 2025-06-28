@@ -9,8 +9,8 @@
 # =========================================================================
 # Key project names and directories
 PROJECT = zedboard
-DEVICE  = xc7z020-clg484-1
-OUT_DIR = ${PROJECT}_${DEVICE}
+PART    = xc7z020-clg484-1
+OUT_DIR = ${PROJECT}_${PART}
 
 
 # =========================================================================
@@ -51,7 +51,7 @@ clean:
 # 01 - Synthesis
 .PHONY: synth
 synth: ${OUT_DIR}/${SYNTH_NAME}.dcp
-${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${DEVICE}.xdc
+${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${PART}.xdc
 
 # Invoke the synthesis script
 	@echo
@@ -61,7 +61,7 @@ ${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${DEVI
 	mkdir -p ${OUT_DIR}
 	vivado -mode batch -source ${SYNTH_NAME}.tcl \
 		-log ${OUT_DIR}/${SYNTH_NAME}.log -journal ${OUT_DIR}/${SYNTH_NAME}.jou \
-		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${DEVICE} ${PROJECT}
+		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${PART} ${PROJECT}
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
