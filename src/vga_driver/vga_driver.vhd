@@ -394,11 +394,15 @@ begin  -- vga_driver_rtl
       o_wr_error    => wr_error,
 
       -- Read ports
-      o_almost_empty => open,
+      o_almost_empty => o_p_fifo_half,
       o_empty        => pixel_fifo_empty,
       i_rd_en        => pic_valid_d1,
       o_data         => pixel_out_data,
-      o_rd_error     => rd_error
+      o_rd_error     => rd_error,
+
+      -- Set fill level ports to be half-full/empty
+      i_dist_from_full  => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1)),
+      i_dist_from_empty => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1))
       );
 
   ----------------------------------------------------------------------
