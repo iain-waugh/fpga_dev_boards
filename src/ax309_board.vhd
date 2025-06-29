@@ -340,6 +340,11 @@ begin  -- ax309_board_rtl
       i_frame_sync => frame_sync_ext,
       o_frame_sync => frame_sync_local,
 
+      -- Line interrupt
+      i_int_at_line => to_unsigned(0, num_bits(C_MAX_SIZE_Y)),
+      o_line_int    => open,
+
+      -- VGA Output signals
       o_vga_hs => o_vga_hs,
       o_vga_vs => o_vga_vs,
 

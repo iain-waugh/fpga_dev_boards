@@ -78,6 +78,11 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
   signal i_frame_sync : std_logic;
   signal o_frame_sync : std_logic;
 
+  -- Line interrupt
+  signal i_int_at_line : unsigned(num_bits(C_MAX_SIZE_Y) - 1 downto 0);
+  signal o_line_int    : std_logic;  -- Pulses high when a specified line is reached
+
+  -- VGA Output signals
   signal o_vga_hs : std_logic;
   signal o_vga_vs : std_logic;
 
@@ -93,27 +98,30 @@ architecture tb_vga_driver_rtl of tb_vga_driver is
 begin  -- architecture tb_vga_driver_rtl
 
   -- Horizontal signals
-   i_h_f_porch_time <= to_unsigned(8, num_bits(C_MAX_PORCH));
-   i_h_sync_time    <= to_unsigned(32, num_bits(C_MAX_SYNC));
-   i_h_b_porch_time <= to_unsigned(40, num_bits(C_MAX_PORCH));
+  i_h_f_porch_time <= to_unsigned(8, num_bits(C_MAX_PORCH));
+  i_h_sync_time    <= to_unsigned(32, num_bits(C_MAX_SYNC));
+  i_h_b_porch_time <= to_unsigned(40, num_bits(C_MAX_PORCH));
 
   -- Vertical signals
-   i_v_f_porch_time <= to_unsigned(3, num_bits(C_MAX_PORCH));
-   i_v_sync_time    <= to_unsigned(6, num_bits(C_MAX_SYNC));
-   i_v_b_porch_time <= to_unsigned(6, num_bits(C_MAX_PORCH));
+  i_v_f_porch_time <= to_unsigned(3, num_bits(C_MAX_PORCH));
+  i_v_sync_time    <= to_unsigned(6, num_bits(C_MAX_SYNC));
+  i_v_b_porch_time <= to_unsigned(6, num_bits(C_MAX_PORCH));
 
   -- Un-addressable border colour
-   i_h_border_size <= to_unsigned(80, num_bits(C_MAX_SIZE_X));
-   i_v_border_size <= to_unsigned(15, num_bits(C_MAX_SIZE_Y));
+  i_h_border_size <= to_unsigned(80, num_bits(C_MAX_SIZE_X));
+  i_v_border_size <= to_unsigned(15, num_bits(C_MAX_SIZE_Y));
 
-   -- Addressable video
-   i_h_pic_size <= to_unsigned(320, num_bits(C_MAX_SIZE_X));
-   i_v_pic_size <= to_unsigned(200, num_bits(C_MAX_SIZE_Y));
+  -- Addressable video
+  i_h_pic_size <= to_unsigned(320, num_bits(C_MAX_SIZE_X));
+  i_v_pic_size <= to_unsigned(200, num_bits(C_MAX_SIZE_Y));
 
-   -- What colour do you want the border to be?
-   i_border_red   <= to_unsigned(7, C_BITS_RED);
-   i_border_green <= to_unsigned(7, C_BITS_GREEN);
-   i_border_blue  <= to_unsigned(7, C_BITS_BLUE);
+  -- What colour do you want the border to be?
+  i_border_red   <= to_unsigned(7, C_BITS_RED);
+  i_border_green <= to_unsigned(7, C_BITS_GREEN);
+  i_border_blue  <= to_unsigned(7, C_BITS_BLUE);
+
+  -- Line interrupt
+  i_int_at_line <= to_unsigned(10, num_bits(C_MAX_SIZE_Y));
 
   -- Component instantiation
   DUT : entity work.vga_driver
@@ -167,6 +175,11 @@ begin  -- architecture tb_vga_driver_rtl
       i_frame_sync => i_frame_sync,
       o_frame_sync => o_frame_sync,
 
+      -- Line interrupt
+      i_int_at_line => i_int_at_line,
+      o_line_int    => o_line_int,
+
+      -- VGA Output signals
       o_vga_hs => o_vga_hs,
       o_vga_vs => o_vga_vs,
 

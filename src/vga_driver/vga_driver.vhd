@@ -85,6 +85,11 @@ entity vga_driver is
     i_frame_sync : in  std_logic;  -- Effectively resets the frame counters
     o_frame_sync : out std_logic;  -- Pulses high at the start of a new frame
 
+    -- Line interrupt
+    i_int_at_line : in  unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0) := (others => '0');
+    o_line_int    : out std_logic;  -- Pulses high when a specified line is reached
+
+    -- VGA Output signals
     o_vga_hs : out std_logic;
     o_vga_vs : out std_logic;
 
@@ -333,8 +338,23 @@ begin  -- vga_driver_rtl
   end process;
 
   ----------------------------------------------------------------------
-  -- Handle pixel input and output with a fifo
-  -- Note: The FIFO gets reset at the start of each frame
+  -- Create an interrupt pulse when we get to the programmed line
+  process (pixel_clk)
+  begin
+    if rising_edge(pixel_clk) then
+      o_line_int <= '0';
+      if h_state_d1 = sync and h_state = b_porch then
+        -- Create an interrupt if we're at the line of interest
+        if v_pic_count = i_int_at_line and v_state_d1 = pic then
+          o_line_int <= '1';
+        end if;
+      end if;
+    end if;
+  end process;
+
+----------------------------------------------------------------------
+-- Handle pixel input and output with a fifo
+-- Note: The FIFO gets reset at the start of each frame
   pixel_fifo_reset <= i_frame_sync or frame_start;
 
   pixel_in_data <= std_logic_vector(i_pixel_red) &
@@ -377,15 +397,15 @@ begin  -- vga_driver_rtl
       o_rd_empty        => pixel_fifo_empty,
       i_rd_en           => pic_valid_d1,
       o_rd_data         => pixel_out_data,
-      o_rd_error     => rd_error,
+      o_rd_error        => rd_error,
 
       -- Set fill level ports to be half-full/empty
       i_wr_full_limit  => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1)),
       i_rd_empty_limit => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1))
       );
 
-  ----------------------------------------------------------------------
-  -- Generate strobes
+----------------------------------------------------------------------
+-- Generate strobes
   process (pixel_clk)
   begin
     if rising_edge(pixel_clk) then
@@ -403,9 +423,9 @@ begin  -- vga_driver_rtl
     end if;
   end process;
 
-  ----------------------------------------------------------------------
-  -- Register the outputs and hold the RGB output low when we're not
-  -- within the addressable display area
+----------------------------------------------------------------------
+-- Register the outputs and hold the RGB output low when we're not
+-- within the addressable display area
   process (pixel_clk)
   begin
     if rising_edge(pixel_clk) then
