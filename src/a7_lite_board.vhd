@@ -4,9 +4,6 @@ use ieee.numeric_std.all;
 
 library work;
 use work.util_pkg.all;
-use work.clk_gen;
-use work.pulse_gen;
-use work.hello_world;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -45,7 +42,8 @@ entity a7_lite_board is
         ------------------------------------------------------
         -- DDR3 Ram signals
         -- Note: use UG583
-        o_ddr3_clk_p, o_ddr3_clk_n : out std_logic;
+        o_ddr3_clk_p : out std_logic;
+        o_ddr3_clk_n : out std_logic;
         o_ddr3_clken : out std_logic;
 
         o_ddr3_addr  : out std_logic_vector(14 downto 0);
@@ -53,7 +51,8 @@ entity a7_lite_board is
 
         io_ddr3_dq   : inout std_logic_vector(15 downto 0);
         o_ddr3_dm    : out std_logic_vector(1 downto 0);
-        io_ddr3_dqs_p, io_ddr3_dqs_n : inout std_logic_vector(1 downto 0);
+        io_ddr3_dqs_p : inout std_logic_vector(1 downto 0);
+        io_ddr3_dqs_n : inout std_logic_vector(1 downto 0);
 
         o_ddr3_nrst  : out std_logic;
         o_ddr3_n_wen : out std_logic;
@@ -66,8 +65,10 @@ entity a7_lite_board is
         o_hdmi_scl : out std_logic;
         io_hdmi_sda : inout std_logic;
 
-        o_hdmi_d_p, o_hdmi_d_n : out std_logic_vector(2 downto 0);
-        o_hdmi_clk_p, o_hdmi_clk_n : out std_logic
+        o_hdmi_d_p : out std_logic_vector(2 downto 0);
+        o_hdmi_d_n : out std_logic_vector(2 downto 0);
+        o_hdmi_clk_p : out std_logic;
+        o_hdmi_clk_n : out std_logic
     );
 end entity;
 
@@ -93,7 +94,7 @@ begin
     )
      port map(
         clk => i_clk_50,
-        rst => not i_nrst,
+        rst => "not"(i_nrst),
 
         o_clk_0 => clk_250,
         o_rst_0 => rst_250
