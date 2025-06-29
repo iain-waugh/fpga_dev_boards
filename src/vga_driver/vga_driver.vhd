@@ -332,27 +332,6 @@ begin  -- vga_driver_rtl
     end if;
   end process;
 
-
-  ----------------------------------------------------------------------
-  -- Generate strobes
-  process (pixel_clk)
-  begin
-    if rising_edge(pixel_clk) then
-      if h_state_d1 = sync then
-        o_vga_hs <= '1';
-      else
-        o_vga_hs <= '0';
-      end if;
-
-      if v_state_d1 = sync then
-        o_vga_vs <= '1';
-      else
-        o_vga_vs <= '0';
-      end if;
-    end if;
-  end process;
-
-
   ----------------------------------------------------------------------
   -- Handle pixel input and output with a fifo
   -- Note: The FIFO gets reset at the start of each frame
@@ -404,6 +383,25 @@ begin  -- vga_driver_rtl
       i_dist_from_full  => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1)),
       i_dist_from_empty => unsigned('1' & to_unsigned(0, G_LOG2_PIXEL_FIFO_DEPTH - 1))
       );
+
+  ----------------------------------------------------------------------
+  -- Generate strobes
+  process (pixel_clk)
+  begin
+    if rising_edge(pixel_clk) then
+      if h_state_d1 = sync then
+        o_vga_hs <= '1';
+      else
+        o_vga_hs <= '0';
+      end if;
+
+      if v_state_d1 = sync then
+        o_vga_vs <= '1';
+      else
+        o_vga_vs <= '0';
+      end if;
+    end if;
+  end process;
 
   ----------------------------------------------------------------------
   -- Register the outputs and hold the RGB output low when we're not
