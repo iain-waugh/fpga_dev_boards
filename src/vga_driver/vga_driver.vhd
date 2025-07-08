@@ -60,7 +60,7 @@ entity vga_driver is
     i_v_sync_time    : in unsigned(num_bits(G_MAX_SYNC) - 1 downto 0);
     i_v_b_porch_time : in unsigned(num_bits(G_MAX_PORCH) - 1 downto 0);
 
-    -- Un-addressable border colour
+    -- Un-addressable border size
     i_h_border_size : in unsigned(num_bits(G_MAX_SIZE_X) - 1 downto 0);
     i_v_border_size : in unsigned(num_bits(G_MAX_SIZE_Y) - 1 downto 0);
 
