@@ -26,7 +26,7 @@ ROUTE_NAME = ${PROJECT}_route
 
 # =========================================================================
 # Build recipes
-# 00 - Miscellaneous 'make' recpies
+# 00 - Miscellaneous 'make' recipes
 #
 # 01a - Load design/cores: read_vhdl xxx.vhd  read_checkpoint xxx.dcp
 # 01b - Synthesis: synth_design
@@ -60,7 +60,7 @@ ${OUT_DIR}/${SYNTH_NAME}.dcp : ../../src/${PROJECT}.vhd ${SYNTH_NAME}.tcl ${PART
 	@echo
 	mkdir -p ${OUT_DIR}
 	vivado -mode batch -source ${SYNTH_NAME}.tcl \
-		-log ${OUT_DIR}/${SYNTH_NAME}.log -journal ${OUT_DIR}/${SYNTH_NAME}.jou \
+		-log ${OUT_DIR}/${SYNTH_NAME}.log -nojournal \
 		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${PART} ${PROJECT}
 
 
@@ -76,5 +76,5 @@ ${OUT_DIR}/${ROUTE_NAME}.dcp : ${OUT_DIR}/${SYNTH_NAME}.dcp ${ROUTE_NAME}.tcl
 	@echo '## ---  Running Place and Route  --- ##'
 	@echo
 	vivado -mode batch -source ${ROUTE_NAME}.tcl \
-		-log ${OUT_DIR}/${ROUTE_NAME}.log -journal ${OUT_DIR}/${ROUTE_NAME}.jou \
+		-log ${OUT_DIR}/${ROUTE_NAME}.log -nojournal \
 		-tclargs ${OUT_DIR} ${SYNTH_NAME} ${ROUTE_NAME} ${PROJECT}
