@@ -11,7 +11,7 @@ vhdl work "../../src/common/fifo/fifo_sync.vhd"
 vhdl work "../../src/hello_world/hello_world.vhd"
 
 # VGA Output
-vhdl work "../../src/vga_driver/vga_driver.vhd"
+vhdl work "../../src/video/vga/vga_driver.vhd"
 
 # Main file
 vhdl work "../../src/ax309_board.vhd"

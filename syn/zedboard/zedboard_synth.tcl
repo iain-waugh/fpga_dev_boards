@@ -39,7 +39,7 @@ read_vhdl "../../src/common/fifo/fifo_sync.vhd"
 read_vhdl "../../src/hello_world/hello_world.vhd"
 
 # VGA Output
-read_vhdl "../../src/vga_driver/vga_driver.vhd"
+read_vhdl "../../src/video/vga/vga_driver.vhd"
 
 # Main file
 read_vhdl "../../src/zedboard.vhd"
