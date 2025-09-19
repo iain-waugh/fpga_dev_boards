@@ -21,8 +21,8 @@ package util_pkg is
   -- Maths functions
   function num_bits(x : natural) return natural;
 
-  function maximum(l, r : integer) return integer;
-  function minimum(l, r : integer) return integer;
+  function max(l, r : integer) return integer;
+  function min(l, r : integer) return integer;
 
   -- Bit ordering functions
   function swap_bit(slv  : std_logic_vector) return std_logic_vector;
@@ -75,15 +75,15 @@ package body util_pkg is
     return n;
   end num_bits;
 
-  function maximum(l, r : integer) return integer is
+  function max(l, r : integer) return integer is
   begin
     if l > r then return l; else return r; end if;
-  end maximum;
+  end max;
 
-  function minimum(l, r : integer) return integer is
+  function min(l, r : integer) return integer is
   begin
     if l < r then return l; else return r; end if;
-  end minimum;
+  end min;
 
   -------------------------------------------------------------------------
   -- Bit Ordering functions
