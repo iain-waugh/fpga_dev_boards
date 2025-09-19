@@ -118,12 +118,7 @@ begin  -- fifo_sync_rtl
       end if;
     end if;
   end process u_ram_wr;
-  u_ram_rd : process (clk)
-  begin
-    if rising_edge(clk) then
-      data <= ram(to_integer(rd_ptr));
-    end if;
-  end process u_ram_rd;
+  data <= ram(to_integer(rd_ptr));
 
   ----------------------------------------------------------------------
   -- Handle the counters
@@ -268,8 +263,6 @@ begin  -- fifo_sync_rtl
       end if;
     end if;
   end process;
-
-
   -- pragma translate_on
 
 end fifo_sync_rtl;

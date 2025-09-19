@@ -157,9 +157,9 @@ begin  -- architecture tb_fifo_sync_rtl
       ) is
       variable v_rd_data : std_logic_vector(G_DATA_WIDTH - 1 downto 0);
     begin
+      v_rd_data := o_rd_data;
       i_rd_en   <= '1';
       wait_falling_clk(1);
-      v_rd_data := o_rd_data;
       if v_rd_data /= expected and check = true then
         report "FIFO read did not match the expected data." severity error;
         test_failed <= true;
@@ -197,9 +197,9 @@ begin  -- architecture tb_fifo_sync_rtl
     begin
       i_wr_en   <= '1';
       i_wr_data <= data;
+      v_rd_data := o_rd_data;
       i_rd_en   <= '1';
       wait_falling_clk(1);
-      v_rd_data := o_rd_data;
       if v_rd_data /= expected and check = true then
         report "FIFO read did not match the expected data." severity error;
         test_failed <= true;
